@@ -99,20 +99,47 @@
     <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-
     <script>
-        // 1. 配置本地 Markdown 文件地址
-        // const markdownFileUrl = './data/书完整转录_norm/马工程马克思主义基本原理2023年版.md'; // 这里替换成你的本地文件名
-        const markdownFileUrl = 'https://raw.githubusercontent.com/you2705837989-qwen/book_view_md/main/data/书完整转录_norm/马工程马克思主义基本原理2023年版.md';
+        // 1. 配置文件列表地址
+        const fileListUrl = './files.json'; // JSON 文件路径
+        const contentEl = document.getElementById('main-content');
+        const tocUl = document.getElementById('toc');
 
         async function init() {
             try {
-                // 2. 获取 Markdown 内容
-                const response = await fetch(markdownFileUrl);
-                if (!response.ok) throw new Error('无法读取文件，请确保使用了本地服务器环境');
+                // 2. 加载文件列表
+                const response = await fetch(fileListUrl);
+                if (!response.ok) throw new Error('无法加载文件列表');
+                const files = await response.json();
+
+                // 3. 生成文件导航菜单
+                files.forEach(file => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = file.name;
+                    a.style.cursor = 'pointer'; // 添加手型光标
+                    a.onclick = () => loadMarkdown(file.url); // 点击加载 Markdown
+                    li.appendChild(a);
+                    tocUl.appendChild(li);
+                });
+
+                // 默认加载第一个文件（可选）
+                if (files.length > 0) {
+                    loadMarkdown(files[0].url);
+                }
+            } catch (err) {
+                tocUl.innerHTML = `<li style="color:red;">错误: ${err.message}</li>`;
+            }
+        }
+
+        async function loadMarkdown(url) {
+            try {
+                // 4. 获取 Markdown 内容
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('无法读取文件');
                 const mdText = await response.text();
 
-                // 3. 配置 marked (结合 highlight.js)
+                // 5. 配置 marked 并渲染
                 marked.setOptions({
                     highlight: function(code, lang) {
                         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -122,26 +149,24 @@
                     breaks: true
                 });
 
-                // 4. 渲染 Markdown
-                const contentEl = document.getElementById('main-content');
                 contentEl.innerHTML = marked.parse(mdText);
 
-                // 5. 生成目录
+                // 6. 生成目录（基于当前 Markdown 内容）
                 generateTOC(contentEl);
-
             } catch (err) {
-                document.getElementById('main-content').innerHTML = 
-                    `<div style="color:red;">错误: ${err.message}<br><small>提示：由于浏览器安全限制，请使用 Live Server 插件或任何 Web 服务器打开此 HTML。</small></div>`;
+                contentEl.innerHTML = `<div style="color:red;">错误: ${err.message}</div>`;
             }
         }
 
         function generateTOC(contentEl) {
             const tocUl = document.getElementById('toc');
+            tocUl.innerHTML = ''; // 清空之前的目录
+
             // 查找所有标题
             const headings = contentEl.querySelectorAll('h1, h2, h3');
             
             headings.forEach((heading, index) => {
-                // 为标题添加 ID 方便跳转（如果原文件没有 ID）
+                // 为标题添加 ID 方便跳转
                 const id = 'heading-' + index;
                 heading.setAttribute('id', id);
 
