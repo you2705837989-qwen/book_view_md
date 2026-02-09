@@ -1326,10 +1326,13 @@
         }
 
         // 加载 PDF - 使用多种策略确保兼容性
-        function loadPDF(pdfUrl) {
+
+        // 替换原有的 loadPDF 函数
+        async function loadPDF(pdfUrl) {
             const placeholder = document.getElementById('pdf-placeholder');
             const viewer = document.getElementById('pdf-viewer');
             const downloadBtn = document.getElementById('pdf-download-btn');
+            const container = document.getElementById('pdf-container');
 
             if (!pdfUrl) {
                 placeholder.style.display = 'flex';
@@ -1343,38 +1346,255 @@
                 return;
             }
 
-            // 确保路径是绝对路径或正确处理相对路径
+            // 确保路径是绝对路径
             let fullUrl = pdfUrl;
             if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
                 fullUrl = './' + pdfUrl;
             }
 
-            placeholder.style.display = 'none';
-            viewer.style.display = 'block';
-            downloadBtn.style.display = 'inline-flex';
             downloadBtn.href = fullUrl;
+            downloadBtn.style.display = 'inline-flex';
 
-            // 策略1: 如果浏览器支持原生 PDF 查看，直接使用
-            // 策略2: 使用 PDF.js
-            // 策略3: 使用 Google Docs Viewer 作为后备
-
+            // 检测环境
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            
+            // 策略1: 移动端或 Safari 优先使用原生（体验更好，但可能下载）
+            if (isMobile || isSafari) {
+                viewer.src = fullUrl + '#toolbar=1';
+                viewer.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
 
-            if (isMobile) {
-                // 移动设备直接使用原生查看器
-                viewer.src = fullUrl;
-            } else {
-                // 桌面端优先使用原生 PDF 查看器，兼容性最好
-                // 添加 #toolbar=1 确保显示工具栏
-                viewer.src = fullUrl + '#toolbar=1&navpanes=1';
+            // 策略2: 桌面端使用 PDF.js 渲染（避免自动下载，兼容性最好）
+            try {
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = `
+                    <div class="spinner"></div>
+                    <p>正在加载 PDF...</p>
+                `;
+                viewer.style.display = 'none';
 
-                // 如果加载失败，可以尝试使用 PDF.js
-                viewer.onerror = () => {
-                    console.log('原生 PDF 查看器加载失败，尝试使用 PDF.js');
-                    // 这里可以添加 PDF.js 的渲染逻辑
-                };
+                // 清空之前的 canvas
+                container.querySelectorAll('.pdfjs-canvas').forEach(el => el.remove());
+
+                // 加载 PDF 文档
+                const loadingTask = pdfjsLib.getDocument({
+                    url: fullUrl,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+
+                // 创建自定义渲染容器（替代 iframe）
+                const pdfWrapper = document.createElement('div');
+                pdfWrapper.className = 'pdfjs-canvas';
+                pdfWrapper.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background: #f5f5f5;
+                    padding: 20px;
+                    box-sizing: border-box;
+                `;
+                
+                // 创建页面容器
+                const pagesContainer = document.createElement('div');
+                pagesContainer.style.cssText = `
+                    max-width: 100%;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 20px;
+                `;
+                pdfWrapper.appendChild(pagesContainer);
+                
+                // 插入到 DOM
+                container.insertBefore(pdfWrapper, viewer);
+                
+                // 渲染所有页面（或者只渲染前几页 + 懒加载）
+                await renderAllPages(pdfDoc, pagesContainer);
+                
+                placeholder.style.display = 'none';
+                
+                // 添加简单的页码指示器
+                addPDFControls(pdfWrapper, fullUrl);
+
+            } catch (error) {
+                console.error('PDF.js 加载失败:', error);
+                
+                // 策略3: PDF.js 失败时回退到 iframe
+                placeholder.style.display = 'none';
+                viewer.style.display = 'block';
+                viewer.src = fullUrl + '#toolbar=1';
+                
+                // 如果 iframe 也失败（触发下载），显示提示
+                setTimeout(() => {
+                    if (document.hidden) {
+                        // 用户可能切换到了下载标签，显示提示
+                        showPDFError(placeholder, fullUrl);
+                    }
+                }, 1000);
             }
         }
+
+        // 渲染所有页面（简化版，实际使用可改为虚拟滚动）
+        async function renderAllPages(pdfDoc, container) {
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+                
+                const canvas = document.createElement('canvas');
+                canvas.style.cssText = `
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    background: white;
+                    max-width: 100%;
+                `;
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                container.appendChild(canvas);
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                // 添加页码标记
+                const pageLabel = document.createElement('div');
+                pageLabel.textContent = `第 ${i} 页 / 共 ${pdfDoc.numPages} 页`;
+                pageLabel.style.cssText = `
+                    color: #666;
+                    font-size: 12px;
+                    margin-top: -10px;
+                    margin-bottom: 10px;
+                `;
+                container.appendChild(pageLabel);
+            }
+        }
+
+        // 添加 PDF 控制栏（页码、下载、全屏）
+        function addPDFControls(container, pdfUrl) {
+            const controls = document.createElement('div');
+            controls.style.cssText = `
+                position: sticky;
+                bottom: 20px;
+                background: rgba(255,255,255,0.95);
+                padding: 10px 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+                display: flex;
+                gap: 15px;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                margin-top: 20px;
+            `;
+            
+            controls.innerHTML = `
+                <button onclick="this.closest('.pdfjs-canvas').scrollTo({top: 0, behavior: 'smooth'})" 
+                        style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">
+                    顶部
+                </button>
+                <span style="color: #666; font-size: 14px;">PDF.js 渲染模式</span>
+                <a href="${pdfUrl}" download 
+                style="padding: 6px 12px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                    下载 PDF
+                </a>
+            `;
+            
+            container.appendChild(controls);
+        }
+
+        // PDF 加载失败提示
+        function showPDFError(placeholder, pdfUrl) {
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                    <h3>PDF 已在新的标签页打开或开始下载</h3>
+                    <p style="color: #666; margin: 16px 0;">如果未自动开始，请点击下方按钮</p>
+                    <a href="${pdfUrl}" target="_blank" 
+                    style="display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 6px; margin-top: 10px;">
+                        打开 PDF
+                    </a>
+                </div>
+            `;
+        }
+
+        // 修改 openPdfFullscreen 函数，支持 PDF.js 模式
+        function openPdfFullscreen() {
+            const pdfUrl = currentBook?.pdfUrl;
+            if (!pdfUrl) return;
+            
+            let fullUrl = pdfUrl;
+            if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+                fullUrl = './' + pdfUrl;
+            }
+            
+            // 使用 Mozilla 的在线查看器（终极后备方案）
+            const mozillaViewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}`;
+            window.open(mozillaViewer, '_blank');
+        }
+
+
+
+        // function loadPDF(pdfUrl) {
+        //     const placeholder = document.getElementById('pdf-placeholder');
+        //     const viewer = document.getElementById('pdf-viewer');
+        //     const downloadBtn = document.getElementById('pdf-download-btn');
+
+        //     if (!pdfUrl) {
+        //         placeholder.style.display = 'flex';
+        //         viewer.style.display = 'none';
+        //         downloadBtn.style.display = 'none';
+        //         placeholder.innerHTML = `
+        //             <div class="pdf-placeholder-icon">📑</div>
+        //             <h3>暂无 PDF 文件</h3>
+        //             <p>本书未提供 PDF 版本</p>
+        //         `;
+        //         return;
+        //     }
+
+        //     // 确保路径是绝对路径或正确处理相对路径
+        //     let fullUrl = pdfUrl;
+        //     if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+        //         fullUrl = './' + pdfUrl;
+        //     }
+
+        //     placeholder.style.display = 'none';
+        //     viewer.style.display = 'block';
+        //     downloadBtn.style.display = 'inline-flex';
+        //     downloadBtn.href = fullUrl;
+
+        //     // 策略1: 如果浏览器支持原生 PDF 查看，直接使用
+        //     // 策略2: 使用 PDF.js
+        //     // 策略3: 使用 Google Docs Viewer 作为后备
+
+        //     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        //     if (isMobile) {
+        //         // 移动设备直接使用原生查看器
+        //         viewer.src = fullUrl;
+        //     } else {
+        //         // 桌面端优先使用原生 PDF 查看器，兼容性最好
+        //         // 添加 #toolbar=1 确保显示工具栏
+        //         viewer.src = fullUrl + '#toolbar=1&navpanes=1';
+
+        //         // 如果加载失败，可以尝试使用 PDF.js
+        //         viewer.onerror = () => {
+        //             console.log('原生 PDF 查看器加载失败，尝试使用 PDF.js');
+        //             // 这里可以添加 PDF.js 的渲染逻辑
+        //         };
+        //     }
+        // }
 
         // 加载 Markdown
         async function loadMarkdown(url) {
