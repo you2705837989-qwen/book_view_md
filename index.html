@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的数字图书馆</title>
+    <title>我的数字图书馆 - 三栏阅读器</title>
 
     <!-- 引入 GitHub 风格的 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -20,12 +20,23 @@
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --bg-color: #f5f7fa;
-            --card-bg: #ffffff;
-            --text-primary: #2d3748;
-            --text-secondary: #718096;
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --bg-color: #f0f4f8;
+            --sidebar-bg: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
             --accent-color: #667eea;
-            --sidebar-width: 320px;
+            --hover-bg: rgba(102, 126, 234, 0.08);
+            --active-bg: rgba(102, 126, 234, 0.15);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+
+            --toc-width: 280px;
+            --content-width: 45%;
+            --pdf-width: 35%;
         }
 
         body {
@@ -33,6 +44,7 @@
             background: var(--bg-color);
             min-height: 100vh;
             overflow-x: hidden;
+            color: var(--text-primary);
         }
 
         /* ==================== 第一层：图书馆首页 ==================== */
@@ -41,7 +53,7 @@
             flex-direction: column;
             min-height: 100vh;
             padding: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             background-attachment: fixed;
         }
 
@@ -55,7 +67,8 @@
             font-size: 3rem;
             font-weight: 700;
             margin-bottom: 15px;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            letter-spacing: -1px;
         }
 
         .library-header p {
@@ -65,7 +78,7 @@
 
         .books-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 30px;
             max-width: 1400px;
             margin: 0 auto;
@@ -74,22 +87,23 @@
         }
 
         .book-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 20px;
             overflow: hidden;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
             position: relative;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .book-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-lg);
         }
 
         .book-cover {
-            height: 200px;
+            height: 180px;
             background: var(--primary-gradient);
             display: flex;
             align-items: center;
@@ -109,7 +123,7 @@
             background: linear-gradient(
                 45deg,
                 transparent 30%,
-                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.15) 50%,
                 transparent 70%
             );
             transform: rotate(45deg);
@@ -117,7 +131,7 @@
         }
 
         .book-card:hover .book-cover::before {
-            animation: shine 0.5s ease-in-out;
+            animation: shine 0.6s ease-in-out;
         }
 
         @keyframes shine {
@@ -130,7 +144,7 @@
         }
 
         .book-title {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 8px;
@@ -139,32 +153,40 @@
 
         .book-meta {
             font-size: 0.9rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             margin-bottom: 15px;
         }
 
-        .book-stats {
+        .book-features {
             display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
-        .book-stat {
-            display: flex;
+        .feature-tag {
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--hover-bg);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            font-weight: 600;
         }
 
         .read-btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 25px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
             background: var(--primary-gradient);
             color: white;
             text-decoration: none;
-            border-radius: 25px;
-            font-size: 0.9rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
             font-weight: 600;
             transition: all 0.3s ease;
             border: none;
@@ -172,74 +194,82 @@
         }
 
         .read-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.02);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        /* ==================== 第二层：阅读界面 ==================== */
+        /* ==================== 第二层：三栏阅读界面 ==================== */
         #reader-view {
             display: none;
             height: 100vh;
             overflow: hidden;
+            background: var(--bg-color);
         }
 
         .reader-container {
             display: flex;
             height: 100vh;
+            gap: 0;
         }
 
-        /* 左侧目录栏 */
-        .reader-sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            border-right: 1px solid #e2e8f0;
+        /* 左侧：目录导航 */
+        .toc-sidebar {
+            width: var(--toc-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-sm);
             z-index: 100;
         }
 
-        .sidebar-header {
-            padding: 25px;
+        .toc-header {
+            padding: 20px;
             background: var(--primary-gradient);
             color: white;
+            flex-shrink: 0;
         }
 
         .back-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: white;
+            color: rgba(255,255,255,0.9);
             text-decoration: none;
-            font-size: 0.9rem;
-            opacity: 0.9;
-            transition: opacity 0.2s;
-            margin-bottom: 15px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
             cursor: pointer;
+            transition: all 0.2s;
+            padding: 6px 0;
         }
 
         .back-btn:hover {
-            opacity: 1;
+            color: white;
+            transform: translateX(-3px);
         }
 
         .current-book-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .toc-section {
+        .toc-content {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
         }
 
-        .toc-title {
-            font-size: 0.75rem;
+        .toc-section-title {
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--text-secondary);
-            margin-bottom: 15px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
             font-weight: 700;
         }
 
@@ -253,7 +283,7 @@
 
         #toc-list a {
             display: block;
-            padding: 10px 15px;
+            padding: 10px 12px;
             text-decoration: none;
             color: var(--text-secondary);
             font-size: 0.9rem;
@@ -261,85 +291,135 @@
             transition: all 0.2s ease;
             cursor: pointer;
             border-left: 3px solid transparent;
+            line-height: 1.4;
         }
 
         #toc-list a:hover {
-            background: rgba(102, 126, 234, 0.08);
+            background: var(--hover-bg);
             color: var(--accent-color);
             border-left-color: var(--accent-color);
-            transform: translateX(5px);
+            transform: translateX(4px);
         }
 
         #toc-list a.active {
-            background: rgba(102, 126, 234, 0.15);
+            background: var(--active-bg);
             color: var(--accent-color);
             border-left-color: var(--accent-color);
             font-weight: 600;
         }
 
         /* 层级缩进 */
-        .toc-h1 { font-weight: 600; color: var(--text-primary); }
-        .toc-h2 { padding-left: 25px !important; }
-        .toc-h3 { padding-left: 40px !important; font-size: 0.85rem !important; }
+        .toc-h1 { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; }
+        .toc-h2 { padding-left: 20px !important; font-size: 0.88rem; }
+        .toc-h3 { padding-left: 35px !important; font-size: 0.82rem; color: var(--text-muted); }
 
-        /* 右侧内容区 */
-        .reader-content {
-            flex: 1;
-            overflow-y: auto;
+        /* 中间：Markdown 内容 */
+        .content-panel {
+            width: var(--content-width);
             background: white;
-            scroll-behavior: smooth;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .content-header {
+            position: sticky;
+            top: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .content-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .icon-btn:hover {
+            background: var(--hover-bg);
+            color: var(--accent-color);
         }
 
         .content-wrapper {
-            max-width: 850px;
-            margin: 0 auto;
-            padding: 50px 40px;
-            min-height: 100%;
+            max-width: 100%;
+            padding: 40px;
         }
 
-        /* Markdown 内容样式优化 */
         .markdown-body {
-            font-size: 1.1rem;
+            font-size: 1rem;
             line-height: 1.8;
             color: var(--text-primary);
         }
 
         .markdown-body h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             color: var(--text-primary);
             border-bottom: 3px solid var(--accent-color);
-            padding-bottom: 20px;
+            padding-bottom: 15px;
             margin-top: 0;
             margin-bottom: 30px;
+            font-weight: 700;
         }
 
         .markdown-body h2 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: var(--text-primary);
-            margin-top: 50px;
+            margin-top: 40px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 600;
         }
 
         .markdown-body h3 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             color: var(--text-secondary);
             margin-top: 30px;
+            font-weight: 600;
         }
 
         .markdown-body p {
             margin-bottom: 20px;
             text-align: justify;
+            color: var(--text-secondary);
         }
 
         .markdown-body pre {
             background: #1a202c;
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             overflow-x: auto;
-            margin: 25px 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            box-shadow: var(--shadow-sm);
         }
 
         .markdown-body code {
@@ -350,17 +430,18 @@
         .markdown-body :not(pre) > code {
             background: rgba(102, 126, 234, 0.1);
             color: var(--accent-color);
-            padding: 3px 10px;
-            border-radius: 6px;
+            padding: 3px 8px;
+            border-radius: 5px;
             font-weight: 600;
+            font-size: 0.85em;
         }
 
         .markdown-body blockquote {
             border-left: 4px solid var(--accent-color);
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-            padding: 25px;
+            padding: 20px;
             border-radius: 0 12px 12px 0;
-            margin: 25px 0;
+            margin: 20px 0;
             color: var(--text-secondary);
             font-style: italic;
         }
@@ -368,31 +449,32 @@
         .markdown-body img {
             max-width: 100%;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin: 25px 0;
+            box-shadow: var(--shadow-md);
+            margin: 20px 0;
         }
 
         .markdown-body table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            margin: 25px 0;
+            margin: 20px 0;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-sm);
+            font-size: 0.95em;
         }
 
         .markdown-body th {
             background: var(--primary-gradient);
             color: white;
-            padding: 15px;
+            padding: 12px 15px;
             font-weight: 600;
             text-align: left;
         }
 
         .markdown-body td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .markdown-body tr:nth-child(even) {
@@ -406,21 +488,21 @@
         .markdown-body a {
             color: var(--accent-color);
             text-decoration: none;
-            border-bottom: 2px solid transparent;
+            border-bottom: 1px dashed var(--accent-color);
             transition: all 0.2s;
         }
 
         .markdown-body a:hover {
-            border-bottom-color: var(--accent-color);
+            border-bottom-style: solid;
         }
 
         .markdown-body ul, .markdown-body ol {
-            padding-left: 30px;
-            margin: 20px 0;
+            padding-left: 25px;
+            margin: 15px 0;
         }
 
         .markdown-body li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .markdown-body li::marker {
@@ -429,9 +511,136 @@
 
         .markdown-body hr {
             border: none;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
-            margin: 50px 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 40px 0;
+        }
+
+        /* 右侧：PDF 阅读器 */
+        .pdf-panel {
+            width: var(--pdf-width);
+            background: #f7fafc;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .pdf-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .pdf-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pdf-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pdf-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pdf-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: var(--hover-bg);
+        }
+
+        .pdf-btn.primary {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        .pdf-btn.primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .pdf-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #e2e8f0;
+        }
+
+        #pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        .pdf-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .pdf-placeholder-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .pdf-placeholder h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+
+        .resize-handle {
+            width: 6px;
+            background: transparent;
+            cursor: col-resize;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .resize-handle:hover,
+        .resize-handle.active {
+            background: var(--accent-color);
+        }
+
+        .resize-handle::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 40px;
+            background: var(--border-color);
+            border-radius: 2px;
         }
 
         /* 加载和错误状态 */
@@ -441,17 +650,17 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(102, 126, 234, 0.1);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.1);
             border-top-color: var(--accent-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         @keyframes spin {
@@ -460,26 +669,26 @@
 
         .error-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px;
             color: #e53e3e;
         }
 
         .empty-state {
             text-align: center;
-            padding: 100px 20px;
-            color: var(--text-secondary);
+            padding: 60px 20px;
+            color: var(--text-muted);
         }
 
         .empty-icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
+            font-size: 4rem;
+            margin-bottom: 15px;
             opacity: 0.5;
         }
 
         /* 滚动条样式 */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -487,15 +696,76 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 4px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.5);
+            background: rgba(102, 126, 234, 0.4);
+        }
+
+        /* 同步滚动指示器 */
+        .sync-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sync-indicator.show {
+            display: flex;
         }
 
         /* 响应式设计 */
+        @media (max-width: 1200px) {
+            :root {
+                --toc-width: 260px;
+                --content-width: 50%;
+                --pdf-width: 30%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .reader-container {
+                flex-direction: column;
+            }
+
+            .toc-sidebar,
+            .content-panel,
+            .pdf-panel {
+                width: 100% !important;
+                height: 33.33vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .pdf-panel {
+                border-bottom: none;
+            }
+        }
+
         @media (max-width: 768px) {
             #library-view {
                 padding: 20px;
@@ -508,58 +778,32 @@
             .books-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
-                padding: 10px;
-            }
-
-            .reader-sidebar {
-                position: fixed;
-                left: -100%;
-                transition: left 0.3s ease;
-                width: 85%;
-                max-width: 300px;
-            }
-
-            .reader-sidebar.open {
-                left: 0;
             }
 
             .content-wrapper {
-                padding: 30px 20px;
+                padding: 20px;
             }
 
             .markdown-body h1 {
-                font-size: 1.8rem;
-            }
-
-            .markdown-body h2 {
-                font-size: 1.4rem;
+                font-size: 1.6rem;
             }
         }
 
-        /* 移动端菜单按钮 */
-        .mobile-menu-btn {
-            display: none;
+        /* 拖拽调整宽度时的遮罩 */
+        .resize-overlay {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: var(--primary-gradient);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+            z-index: 9999;
+            cursor: col-resize;
+            display: none;
         }
 
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+        .resize-overlay.active {
+            display: block;
         }
     </style>
 <base target="_blank">
@@ -570,54 +814,102 @@
     <div id="library-view">
         <header class="library-header">
             <h1>📚 我的数字图书馆</h1>
-            <p>选择一本书开始阅读之旅</p>
+            <p>选择一本书，体验 Markdown + PDF 双栏阅读</p>
         </header>
 
         <div class="books-grid" id="books-container">
-            <!-- 书籍卡片将通过 JS 动态生成 -->
-            <div class="loading-state">
+            <div class="loading-state" style="grid-column: 1/-1;">
                 <div class="spinner"></div>
                 <p>正在加载书库...</p>
             </div>
         </div>
     </div>
 
-    <!-- ==================== 第二层：阅读界面 ==================== -->
+    <!-- ==================== 第二层：三栏阅读界面 ==================== -->
     <div id="reader-view">
         <div class="reader-container">
-            <!-- 左侧目录 -->
-            <aside class="reader-sidebar" id="reader-sidebar">
-                <div class="sidebar-header">
+            <!-- 左侧：目录导航 -->
+            <aside class="toc-sidebar" id="toc-sidebar">
+                <div class="toc-header">
                     <a class="back-btn" onclick="backToLibrary()">
                         ← 返回书库
                     </a>
                     <div class="current-book-title" id="current-book-title">书名</div>
                 </div>
 
-                <div class="toc-section">
-                    <div class="toc-title">目录导航</div>
+                <div class="toc-content">
+                    <div class="toc-section-title">目录导航</div>
                     <ul id="toc-list">
                         <!-- 目录将通过 JS 动态生成 -->
                     </ul>
                 </div>
             </aside>
 
-            <!-- 右侧内容 -->
-            <main class="reader-content" id="reader-content">
+            <div class="resize-handle" data-resize="toc-content"></div>
+
+            <!-- 中间：Markdown 内容 -->
+            <main class="content-panel" id="content-panel">
+                <div class="content-header">
+                    <div class="content-title">
+                        <span>📝</span>
+                        <span>Markdown 预览</span>
+                    </div>
+                    <div class="content-actions">
+                        <button class="icon-btn" onclick="adjustFontSize(-1)" title="缩小字体">A-</button>
+                        <button class="icon-btn" onclick="adjustFontSize(1)" title="放大字体">A+</button>
+                        <button class="icon-btn" onclick="toggleWrap()" title="切换换行">↵</button>
+                    </div>
+                </div>
+
                 <div class="content-wrapper">
                     <article id="markdown-content" class="markdown-body">
                         <div class="loading-state">
                             <div class="spinner"></div>
-                            <p>正在加载内容...</p>
+                            <p>正在加载文档...</p>
                         </div>
                     </article>
                 </div>
             </main>
-        </div>
 
-        <!-- 移动端菜单按钮 -->
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+            <div class="resize-handle" data-resize="content-pdf"></div>
+
+            <!-- 右侧：PDF 阅读器 -->
+            <aside class="pdf-panel" id="pdf-panel">
+                <div class="pdf-header">
+                    <div class="pdf-title">
+                        <span>📄</span>
+                        <span>PDF 原文</span>
+                    </div>
+                    <div class="pdf-actions">
+                        <a id="pdf-download-btn" href="#" target="_blank" class="pdf-btn">
+                            ↓ 下载
+                        </a>
+                        <button class="pdf-btn primary" onclick="openPdfFullscreen()">
+                            ⛶ 全屏
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pdf-container" id="pdf-container">
+                    <div class="pdf-placeholder" id="pdf-placeholder">
+                        <div class="pdf-placeholder-icon">📑</div>
+                        <h3>PDF 预览区</h3>
+                        <p>选择书籍后将在此处显示 PDF 内容</p>
+                    </div>
+                    <iframe id="pdf-viewer" style="display: none;"></iframe>
+                </div>
+            </aside>
+        </div>
     </div>
+
+    <!-- 同步指示器 -->
+    <div class="sync-indicator" id="sync-indicator">
+        <span>🔄</span>
+        <span>已同步到第 <span id="sync-page">1</span> 页</span>
+    </div>
+
+    <!-- 拖拽遮罩 -->
+    <div class="resize-overlay" id="resize-overlay"></div>
 
     <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
@@ -628,6 +920,9 @@
         const fileListUrl = './files.json';
         let currentBook = null;
         let booksData = [];
+        let fontSize = 16;
+        let isResizing = false;
+        let currentResizeHandle = null;
 
         // 初始化
         async function init() {
@@ -670,17 +965,14 @@
                     <div class="book-info">
                         <div class="book-title">${book.name}</div>
                         <div class="book-meta">${book.author || '未知作者'} · ${book.category || '未分类'}</div>
-                        <div class="book-stats">
-                            <span class="book-stat">
-                                <span>📄</span>
-                                <span>${book.pages || '?'} 页</span>
-                            </span>
-                            <span class="book-stat">
-                                <span>⏱</span>
-                                <span>${book.readTime || '?'} 分钟</span>
-                            </span>
+                        <div class="book-features">
+                            <span class="feature-tag">📝 Markdown</span>
+                            <span class="feature-tag">📄 PDF</span>
                         </div>
-                        <button class="read-btn">开始阅读</button>
+                        <button class="read-btn">
+                            <span>开始阅读</span>
+                            <span>→</span>
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -700,20 +992,59 @@
             // 更新书名
             document.getElementById('current-book-title').textContent = book.name;
 
-            // 重置内容区
-            document.getElementById('markdown-content').innerHTML = `
+            // 加载 PDF
+            loadPDF(book.pdfUrl);
+
+            // 加载 Markdown
+            await loadMarkdown(book.url);
+        }
+
+        // 加载 PDF
+        function loadPDF(pdfUrl) {
+            const placeholder = document.getElementById('pdf-placeholder');
+            const viewer = document.getElementById('pdf-viewer');
+            const downloadBtn = document.getElementById('pdf-download-btn');
+
+            if (!pdfUrl) {
+                placeholder.style.display = 'flex';
+                viewer.style.display = 'none';
+                downloadBtn.style.display = 'none';
+                placeholder.innerHTML = `
+                    <div class="pdf-placeholder-icon">📑</div>
+                    <h3>暂无 PDF 文件</h3>
+                    <p>本书未提供 PDF 版本</p>
+                `;
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            viewer.style.display = 'block';
+            downloadBtn.style.display = 'inline-flex';
+            downloadBtn.href = pdfUrl;
+
+            // 使用 Google Docs Viewer 或原生 PDF 查看器
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                viewer.src = pdfUrl;
+            } else {
+                // 使用 PDF.js 或 Google Docs Viewer
+                viewer.src = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(window.location.origin + '/' + pdfUrl)}`;
+            }
+        }
+
+        // 加载 Markdown
+        async function loadMarkdown(url) {
+            const contentEl = document.getElementById('markdown-content');
+
+            contentEl.innerHTML = `
                 <div class="loading-state">
                     <div class="spinner"></div>
-                    <p>正在加载《${book.name}》...</p>
+                    <p>正在加载《${currentBook.name}》...</p>
                 </div>
             `;
 
-            // 清空目录
-            document.getElementById('toc-list').innerHTML = '';
-
             try {
-                // 加载 Markdown 内容
-                const response = await fetch(book.url);
+                const response = await fetch(url);
                 if (!response.ok) throw new Error('无法读取文件');
                 const mdText = await response.text();
 
@@ -728,7 +1059,6 @@
                 });
 
                 // 渲染内容
-                const contentEl = document.getElementById('markdown-content');
                 contentEl.innerHTML = marked.parse(mdText);
 
                 // 生成目录
@@ -740,10 +1070,10 @@
                 });
 
                 // 滚动到顶部
-                document.getElementById('reader-content').scrollTop = 0;
+                document.getElementById('content-panel').scrollTop = 0;
 
             } catch (err) {
-                document.getElementById('markdown-content').innerHTML = `
+                contentEl.innerHTML = `
                     <div class="error-state">
                         <h3>❌ 加载失败</h3>
                         <p>${err.message}</p>
@@ -773,6 +1103,7 @@
 
                 a.textContent = heading.textContent;
                 a.className = `toc-${heading.tagName.toLowerCase()}`;
+                a.href = `#${id}`;
                 a.onclick = (e) => {
                     e.preventDefault();
                     // 移除其他激活状态
@@ -792,24 +1123,46 @@
         function backToLibrary() {
             document.getElementById('reader-view').style.display = 'none';
             document.getElementById('library-view').style.display = 'flex';
-            currentBook = null;
 
-            // 关闭移动端侧边栏
-            document.getElementById('reader-sidebar').classList.remove('open');
+            // 清空 PDF
+            document.getElementById('pdf-viewer').src = '';
+            document.getElementById('pdf-placeholder').style.display = 'flex';
+            document.getElementById('pdf-viewer').style.display = 'none';
+
+            currentBook = null;
         }
 
-        // 切换移动端侧边栏
-        function toggleSidebar() {
-            document.getElementById('reader-sidebar').classList.toggle('open');
+        // 调整字体大小
+        function adjustFontSize(delta) {
+            fontSize += delta * 2;
+            fontSize = Math.max(12, Math.min(24, fontSize));
+            document.querySelector('.markdown-body').style.fontSize = fontSize + 'px';
+        }
+
+        // 切换自动换行
+        function toggleWrap() {
+            const preElements = document.querySelectorAll('.markdown-body pre');
+            preElements.forEach(pre => {
+                const current = pre.style.whiteSpace;
+                pre.style.whiteSpace = current === 'pre-wrap' ? 'pre' : 'pre-wrap';
+            });
+        }
+
+        // PDF 全屏
+        function openPdfFullscreen() {
+            const pdfUrl = currentBook?.pdfUrl;
+            if (pdfUrl) {
+                window.open(pdfUrl, '_blank');
+            }
         }
 
         // 监听滚动，更新目录激活状态
-        document.getElementById('reader-content').addEventListener('scroll', () => {
+        document.getElementById('content-panel').addEventListener('scroll', () => {
             const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3');
             const tocLinks = document.querySelectorAll('#toc-list a');
 
             let current = '';
-            const scrollPos = document.getElementById('reader-content').scrollTop + 100;
+            const scrollPos = document.getElementById('content-panel').scrollTop + 100;
 
             headings.forEach((heading, index) => {
                 if (heading.offsetTop <= scrollPos) {
@@ -821,8 +1174,52 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href') === `#${current}`) {
                     link.classList.add('active');
+                    // 自动滚动目录到可视区域
+                    link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
+        });
+
+        // 拖拽调整宽度
+        document.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                currentResizeHandle = handle;
+                document.getElementById('resize-overlay').classList.add('active');
+                handle.classList.add('active');
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing || !currentResizeHandle) return;
+
+            const container = document.querySelector('.reader-container');
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+
+            if (currentResizeHandle.dataset.resize === 'toc-content') {
+                const tocWidth = Math.max(200, Math.min(400, x));
+                document.documentElement.style.setProperty('--toc-width', tocWidth + 'px');
+            } else if (currentResizeHandle.dataset.resize === 'content-pdf') {
+                const totalWidth = rect.width;
+                const tocWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--toc-width'));
+                const contentWidth = Math.max(300, Math.min(totalWidth - tocWidth - 300, x - tocWidth));
+                const pdfWidth = totalWidth - tocWidth - contentWidth - 12; // 12px for handles
+
+                document.documentElement.style.setProperty('--content-width', contentWidth + 'px');
+                document.documentElement.style.setProperty('--pdf-width', pdfWidth + 'px');
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.getElementById('resize-overlay').classList.remove('active');
+                if (currentResizeHandle) {
+                    currentResizeHandle.classList.remove('active');
+                }
+                currentResizeHandle = null;
+            }
         });
 
         // 启动
