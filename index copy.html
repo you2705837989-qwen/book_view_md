@@ -1327,34 +1327,120 @@
 
         // 加载 PDF - 使用多种策略确保兼容性
 
-        function loadPDF(pdfUrl) {
+        // 替换原有的 loadPDF 函数
+        async function loadPDF(pdfUrl) {
             const placeholder = document.getElementById('pdf-placeholder');
             const viewer = document.getElementById('pdf-viewer');
             const downloadBtn = document.getElementById('pdf-download-btn');
             const container = document.getElementById('pdf-container');
 
             if (!pdfUrl) {
+                placeholder.style.display = 'flex';
+                viewer.style.display = 'none';
+                downloadBtn.style.display = 'none';
                 placeholder.innerHTML = `
                     <div class="pdf-placeholder-icon">📑</div>
                     <h3>暂无 PDF 文件</h3>
+                    <p>本书未提供 PDF 版本</p>
                 `;
                 return;
             }
 
-            // 转换为绝对路径
+            // 确保路径是绝对路径
             let fullUrl = pdfUrl;
-            if (!pdfUrl.startsWith('http')) {
-                fullUrl = new URL(pdfUrl, window.location.href).href;
+            if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+                fullUrl = './' + pdfUrl;
             }
 
             downloadBtn.href = fullUrl;
             downloadBtn.style.display = 'inline-flex';
+
+            // 检测环境
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
             
-            // 使用 Mozilla 官方托管的优化版 Viewer
-            // 优点：极速加载、支持大文件、已优化缓存、不会卡死浏览器
-            viewer.src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}`;
-            viewer.style.display = 'block';
-            placeholder.style.display = 'none';
+            // 策略1: 移动端或 Safari 优先使用原生（体验更好，但可能下载）
+            if (isMobile || isSafari) {
+                viewer.src = fullUrl + '#toolbar=1';
+                viewer.style.display = 'block';
+                placeholder.style.display = 'none';
+                return;
+            }
+
+            // 策略2: 桌面端使用 PDF.js 渲染（避免自动下载，兼容性最好）
+            try {
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = `
+                    <div class="spinner"></div>
+                    <p>正在加载 PDF...</p>
+                `;
+                viewer.style.display = 'none';
+
+                // 清空之前的 canvas
+                container.querySelectorAll('.pdfjs-canvas').forEach(el => el.remove());
+
+                // 加载 PDF 文档
+                const loadingTask = pdfjsLib.getDocument({
+                    url: fullUrl,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+
+                // 创建自定义渲染容器（替代 iframe）
+                const pdfWrapper = document.createElement('div');
+                pdfWrapper.className = 'pdfjs-canvas';
+                pdfWrapper.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background: #f5f5f5;
+                    padding: 20px;
+                    box-sizing: border-box;
+                `;
+                
+                // 创建页面容器
+                const pagesContainer = document.createElement('div');
+                pagesContainer.style.cssText = `
+                    max-width: 100%;
+                    margin: 0 auto;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 20px;
+                `;
+                pdfWrapper.appendChild(pagesContainer);
+                
+                // 插入到 DOM
+                container.insertBefore(pdfWrapper, viewer);
+                
+                // 渲染所有页面（或者只渲染前几页 + 懒加载）
+                await renderAllPages(pdfDoc, pagesContainer);
+                
+                placeholder.style.display = 'none';
+                
+                // 添加简单的页码指示器
+                addPDFControls(pdfWrapper, fullUrl);
+
+            } catch (error) {
+                console.error('PDF.js 加载失败:', error);
+                
+                // 策略3: PDF.js 失败时回退到 iframe
+                placeholder.style.display = 'none';
+                viewer.style.display = 'block';
+                viewer.src = fullUrl + '#toolbar=1';
+                
+                // 如果 iframe 也失败（触发下载），显示提示
+                setTimeout(() => {
+                    if (document.hidden) {
+                        // 用户可能切换到了下载标签，显示提示
+                        showPDFError(placeholder, fullUrl);
+                    }
+                }, 1000);
+            }
         }
 
         // 渲染所有页面（简化版，实际使用可改为虚拟滚动）
