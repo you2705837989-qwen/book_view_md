@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Markdown 预览与目录</title>
-    
+
     <!-- 引入 GitHub 风格的 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
     <!-- 引入代码高亮 CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
-    <!-- Font Awesome 图标库 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+
     <style>
         * {
             margin: 0;
@@ -20,419 +18,461 @@
         }
 
         body {
+            margin: 0;
             display: flex;
             height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
         }
 
-        /* ========== 左侧边栏 ========== */
+        /* 左侧目录样式 - Glassmorphism 效果 */
         #sidebar {
             width: 300px;
-            background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
-            border-right: 3px solid #667eea;
-            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0;
             overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         #sidebar h2 {
             font-size: 1.3rem;
-            margin-bottom: 25px;
-            color: #fff;
+            margin: 0;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 700;
+        }
+
+        #sidebar h2::before {
+            content: "📑";
+            font-size: 1.5rem;
+        }
+
+        #file-list {
+            list-style: none;
+            padding: 15px;
+            flex: 1;
+        }
+
+        #file-list li {
+            margin-bottom: 8px;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        #file-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        #file-list a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+            background: #f7fafc;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        #file-list a:hover {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+
+        #file-list a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-left-color: #fff;
+        }
+
+        /* 目录结构样式 */
+        #toc-container {
+            padding: 15px;
+            border-top: 2px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        #toc-title {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 600;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        #sidebar h2::before {
-            content: "☰";
-            font-size: 1.5rem;
-            color: #667eea;
-        }
-
         #toc {
             list-style: none;
-            flex: 1;
         }
 
         #toc li {
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
+            margin-bottom: 6px;
+            line-height: 1.4;
         }
 
         #toc a {
             text-decoration: none;
-            color: #cbd5e1;
-            font-size: 14px;
-            padding: 10px 12px;
+            color: #4a5568;
+            font-size: 13px;
+            display: block;
+            padding: 6px 10px;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
         }
 
         #toc a:hover {
-            color: #fff;
-            background: rgba(102, 126, 234, 0.15);
-            border-left-color: #667eea;
-            transform: translateX(5px);
-        }
-
-        /* 文件列表项 */
-        .file-item {
-            margin-left: 0 !important;
-            font-weight: 600;
-        }
-
-        .file-item a::before {
-            content: "📄";
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateX(3px);
         }
 
         /* 缩进层级 */
-        .toc-h1 { margin-left: 0; }
-        .toc-h2 { margin-left: 20px; }
-        .toc-h3 { margin-left: 40px; font-size: 0.9em; }
+        .toc-h1 { margin-left: 0; font-weight: 600; color: #2d3748; }
+        .toc-h2 { margin-left: 12px; }
+        .toc-h3 { margin-left: 24px; font-size: 0.85em; color: #718096; }
 
-        .toc-h2 a::before,
-        .toc-h3 a::before {
-            content: "⊱";
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        /* 滚动条美化 */
-        #sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-
-        #sidebar::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.6);
-            border-radius: 3px;
-        }
-
-        #sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.9);
-        }
-
-        /* ========== 右侧内容区 ========== */
+        /* 右侧内容样式 */
         #content-container {
             flex: 1;
             overflow-y: auto;
-            padding: 50px 60px;
-            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 50%, #f0f4f8 100%);
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
+            padding: 40px;
+            scroll-behavior: smooth;
+        }
+
+        .content-wrapper {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            min-height: calc(100vh - 80px);
+            overflow: hidden;
         }
 
         .markdown-body {
-            width: 100%;
+            box-sizing: border-box;
+            min-width: 200px;
             max-width: 900px;
-            background: white;
-            border-radius: 12px;
-            padding: 50px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            line-height: 1.8;
+            margin: 0 auto;
+            padding: 40px;
         }
 
-        /* Markdown 内容美化 */
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.8);
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: "";
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-top-color: transparent;
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 错误提示样式 */
+        .error-message {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px;
+            box-shadow: 0 4px 15px rgba(238, 90, 90, 0.3);
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        /* 代码块样式优化 */
+        .markdown-body pre {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .markdown-body code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-body :not(pre) > code {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* 引用块样式 */
+        .markdown-body blockquote {
+            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+            padding: 20px;
+            border-radius: 0 12px 12px 0;
+            color: #4a5568;
+        }
+
+        /* 表格样式 */
+        .markdown-body table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .markdown-body th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            padding: 15px;
+        }
+
+        .markdown-body td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .markdown-body tr:nth-child(even) {
+            background: #f7fafc;
+        }
+
+        .markdown-body tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* 标题样式优化 */
         .markdown-body h1 {
-            border-bottom: 3px solid #667eea !important;
-            padding-bottom: 15px !important;
-            color: #1e3a8a !important;
-            font-size: 2.2em !important;
-            margin-top: 0 !important;
+            color: #2d3748;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-top: 0;
         }
 
         .markdown-body h2 {
-            border-left: 4px solid #667eea !important;
-            padding-left: 15px !important;
-            color: #1e40af !important;
-            font-size: 1.7em !important;
-            margin-top: 30px !important;
+            color: #4a5568;
+            margin-top: 40px;
         }
 
         .markdown-body h3 {
-            color: #1e40af !important;
-            font-size: 1.4em !important;
-            margin-top: 20px !important;
+            color: #718096;
         }
 
-        .markdown-body h4,
-        .markdown-body h5,
-        .markdown-body h6 {
-            color: #1e40af !important;
-        }
-
-        .markdown-body p {
-            color: #374151 !important;
-            font-size: 16px !important;
-        }
-
+        /* 链接样式 */
         .markdown-body a {
-            color: #667eea !important;
+            color: #667eea;
             text-decoration: none;
             border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         .markdown-body a:hover {
             border-bottom-color: #667eea;
         }
 
-        .markdown-body code {
-            background: #f3f4f6 !important;
-            color: #d946ef !important;
-            padding: 2px 6px !important;
-            border-radius: 4px !important;
-            font-family: "Consolas", "Monaco", monospace !important;
-        }
-
-        .markdown-body pre {
-            background: #1e293b !important;
-            border-radius: 8px !important;
-            border-left: 4px solid #667eea !important;
-            padding: 20px !important;
-            overflow-x: auto;
-        }
-
-        .markdown-body pre code {
-            background: transparent !important;
-            color: #e2e8f0 !important;
-            padding: 0 !important;
-        }
-
-        .markdown-body blockquote {
-            border-left: 4px solid #667eea !important;
-            background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%) !important;
-            padding: 15px 20px !important;
-            color: #555 !important;
-            border-radius: 4px;
-        }
-
-        .markdown-body ul, 
-        .markdown-body ol {
-            margin-left: 25px !important;
+        /* 列表样式 */
+        .markdown-body ul, .markdown-body ol {
+            padding-left: 25px;
         }
 
         .markdown-body li {
-            color: #374151 !important;
             margin-bottom: 8px;
         }
 
-        .markdown-body table {
-            border-collapse: collapse !important;
-            width: 100% !important;
-            margin: 20px 0 !important;
-        }
-
-        .markdown-body table tr:nth-child(odd) {
-            background: rgba(102, 126, 234, 0.05) !important;
-        }
-
-        .markdown-body table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            padding: 12px !important;
-            font-weight: 600 !important;
-        }
-
-        .markdown-body table td {
-            padding: 12px !important;
-            border: 1px solid #e5e7eb !important;
-            color: #374151 !important;
-        }
-
-        .markdown-body strong {
-            color: #1e40af !important;
-            font-weight: 700;
-        }
-
-        /* 初始提示 */
-        .empty-state {
-            text-align: center;
-            padding: 60px 40px;
-            color: #6b7280;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
+        .markdown-body li::marker {
             color: #667eea;
-            margin-bottom: 20px;
-            display: block;
-            animation: float 3s ease-in-out infinite;
         }
 
-        .empty-state p {
-            font-size: 18px;
-            color: #6b7280;
+        /* 分割线 */
+        .markdown-body hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 40px 0;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-
-        /* 滚动条美化 */
-        #content-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        #content-container::-webkit-scrollbar-track {
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        #content-container::-webkit-scrollbar-thumb {
-            background: #667eea;
-            border-radius: 4px;
-        }
-
-        #content-container::-webkit-scrollbar-thumb:hover {
-            background: #764ba2;
-        }
-
-        /* 响应式设计 */
         @media (max-width: 768px) {
             body { 
-                flex-direction: column; 
+                flex-direction: column;
+                overflow: auto;
             }
-            
             #sidebar { 
                 width: 100%; 
-                height: 250px; 
+                height: auto; 
+                max-height: 50vh;
                 border-right: none; 
-                border-bottom: 3px solid #667eea;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            }
+            #content-container { 
                 padding: 20px;
             }
-            
-            #content-container {
-                padding: 30px 20px;
+            .markdown-body { 
+                padding: 20px;
             }
-            
-            .markdown-body {
-                padding: 30px 20px;
-                max-width: 100%;
+            .content-wrapper {
+                min-height: auto;
             }
-
-            .markdown-body h1 {
-                font-size: 1.8em !important;
-            }
-
-            .markdown-body h2 {
-                font-size: 1.4em !important;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #sidebar {
-                height: 200px;
-                padding: 15px;
-            }
-
-            #content-container {
-                padding: 20px 15px;
-            }
-
-            .markdown-body {
-                padding: 20px 15px;
-            }
-        }
-
-        /* 加载动画 */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(102, 126, 234, 0.3);
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
 
-    <!-- 左侧边栏 -->
+    <!-- 左侧目录 -->
     <aside id="sidebar">
-        <h2>文件目录</h2>
-        <ul id="toc">
-            <!-- 目录将通过 JS 动态生成 -->
+        <div id="sidebar-header">
+            <h2>文档浏览器</h2>
+        </div>
+        <ul id="file-list">
+            <!-- 文件列表将通过 JS 动态生成 -->
         </ul>
+        <div id="toc-container" style="display: none;">
+            <div id="toc-title">📋 目录结构</div>
+            <ul id="toc">
+                <!-- 目录将通过 JS 动态生成 -->
+            </ul>
+        </div>
     </aside>
 
     <!-- 右侧内容 -->
     <main id="content-container">
-        <article id="main-content" class="markdown-body">
-            <div class="empty-state">
-                <i class="fas fa-book"></i>
-                <p>👈 请从左侧选择一个文件开始阅读</p>
-            </div>
-        </article>
+        <div class="content-wrapper">
+            <article id="main-content" class="markdown-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📄</div>
+                    <h3>欢迎使用 Markdown 预览器</h3>
+                    <p>请从左侧选择一个文件开始阅读</p>
+                </div>
+            </article>
+        </div>
     </main>
 
     <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script>
+        // 配置文件列表地址
         const fileListUrl = './files.json';
         const contentEl = document.getElementById('main-content');
+        const fileListEl = document.getElementById('file-list');
+        const tocContainer = document.getElementById('toc-container');
         const tocUl = document.getElementById('toc');
-        let allFiles = []; // 保存所有文件信息
+
+        let currentFile = null;
 
         async function init() {
             try {
+                // 加载文件列表
                 const response = await fetch(fileListUrl);
                 if (!response.ok) throw new Error('无法加载文件列表');
-                allFiles = await response.json();
+                const files = await response.json();
 
                 // 生成文件导航菜单
-                allFiles.forEach((file, index) => {
+                files.forEach((file, index) => {
                     const li = document.createElement('li');
-                    li.className = 'file-item';
-                    
                     const a = document.createElement('a');
                     a.textContent = file.name;
-                    a.style.cursor = 'pointer';
+                    a.dataset.url = file.url;
                     a.onclick = (e) => {
                         e.preventDefault();
-                        loadMarkdown(file.url);
+                        loadMarkdown(file.url, a);
                     };
-                    
                     li.appendChild(a);
-                    tocUl.appendChild(li);
+                    fileListEl.appendChild(li);
                 });
+
             } catch (err) {
-                tocUl.innerHTML = `<li style="color:#ff6b6b;">❌ 错误: ${err.message}</li>`;
+                fileListEl.innerHTML = `<li class="error-message">错误: ${err.message}</li>`;
             }
         }
 
-        async function loadMarkdown(url) {
+        async function loadMarkdown(url, element) {
             try {
-                // 显示加载状态
-                contentEl.innerHTML = '<div class="loading"></div> 加载中...';
+                // 更新激活状态
+                document.querySelectorAll('#file-list a').forEach(a => a.classList.remove('active'));
+                if (element) element.classList.add('active');
 
+                currentFile = url;
+
+                // 显示加载状态
+                contentEl.innerHTML = '<div class="loading">正在加载文档</div>';
+
+                // 获取 Markdown 内容
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('无法读取文件');
                 const mdText = await response.text();
 
-                // 配置 marked
+                // 配置 marked 并渲染
                 marked.setOptions({
                     highlight: function(code, lang) {
                         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -443,21 +483,57 @@
                 });
 
                 contentEl.innerHTML = marked.parse(mdText);
+
+                // 生成目录
                 generateTOC(contentEl);
 
-                // 平滑滚动到顶部
-                document.getElementById('content-container').scrollTop = 0;
+                // 显示目录容器
+                tocContainer.style.display = 'block';
+
+                // 高亮代码
+                document.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightBlock(block);
+                });
+
             } catch (err) {
-                contentEl.innerHTML = `<div style="color:#ff6b6b; padding: 20px;">❌ 错误: ${err.message}</div>`;
+                contentEl.innerHTML = `<div class="error-message">❌ 错误: ${err.message}</div>`;
             }
         }
 
         function generateTOC(contentEl) {
-            const tocUl = document.getElementById('toc');
-            
-            // 保存文件列表
-            const fileItems = Array.from(tocUl.querySelectorAll('.file-item'));
-            
             tocUl.innerHTML = '';
-            
-            // 
+
+            // 查找所有标题
+            const headings = contentEl.querySelectorAll('h1, h2, h3');
+
+            if (headings.length === 0) {
+                tocContainer.style.display = 'none';
+                return;
+            }
+
+            headings.forEach((heading, index) => {
+                // 为标题添加 ID 方便跳转
+                const id = 'heading-' + index;
+                heading.setAttribute('id', id);
+
+                // 创建目录项
+                const li = document.createElement('li');
+                li.classList.add('toc-' + heading.tagName.toLowerCase());
+
+                const a = document.createElement('a');
+                a.href = '#' + id;
+                a.textContent = heading.textContent;
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                };
+
+                li.appendChild(a);
+                tocUl.appendChild(li);
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
