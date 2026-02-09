@@ -92,7 +92,7 @@
     <!-- 右侧内容 -->
     <main id="content-container">
         <article id="main-content" class="markdown-body">
-            正在加载内容...
+            请从左侧选择一个文件查看内容...
         </article>
     </main>
 
@@ -123,10 +123,8 @@
                     tocUl.appendChild(li);
                 });
 
-                // 默认加载第一个文件（可选）
-                if (files.length > 0) {
-                    loadMarkdown(files[0].url);
-                }
+                // 删除默认加载第一个文件的代码
+                // 现在需要用户手动选择文件才会显示内容
             } catch (err) {
                 tocUl.innerHTML = `<li style="color:red;">错误: ${err.message}</li>`;
             }
