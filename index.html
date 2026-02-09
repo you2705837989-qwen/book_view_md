@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown 预览与目录</title>
+    <title>我的数字图书馆</title>
 
     <!-- 引入 GitHub 风格的 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
@@ -17,285 +17,377 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            overflow: hidden;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --accent-color: #667eea;
+            --sidebar-width: 320px;
         }
 
-        /* 左侧目录样式 - Glassmorphism 效果 */
-        #sidebar {
-            width: 300px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0;
-            overflow-y: auto;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ==================== 第一层：图书馆首页 ==================== */
+        #library-view {
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
-        }
-
-        #sidebar-header {
+            min-height: 100vh;
+            padding: 40px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-attachment: fixed;
         }
 
-        #sidebar h2 {
-            font-size: 1.3rem;
-            margin: 0;
-            font-weight: 600;
+        .library-header {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+
+        .library-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .library-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .book-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .book-cover {
+            height: 200px;
+            background: var(--primary-gradient);
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        #sidebar h2::before {
-            content: "📑";
-            font-size: 1.5rem;
-        }
-
-        #file-list {
-            list-style: none;
-            padding: 15px;
-            flex: 1;
-        }
-
-        #file-list li {
-            margin-bottom: 8px;
-            border-radius: 8px;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
 
-        #file-list li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        .book-cover::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(255,255,255,0.1) 50%,
+                transparent 70%
+            );
+            transform: rotate(45deg);
+            transition: all 0.5s;
         }
 
-        #file-list a {
-            display: block;
-            padding: 12px 15px;
-            text-decoration: none;
-            color: #4a5568;
-            font-size: 14px;
-            font-weight: 500;
-            background: #f7fafc;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border-radius: 8px;
+        .book-card:hover .book-cover::before {
+            animation: shine 0.5s ease-in-out;
         }
 
-        #file-list a:hover {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            border-left-color: #667eea;
-            color: #667eea;
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
-        #file-list a.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-left-color: #fff;
+        .book-info {
+            padding: 25px;
         }
 
-        /* 目录结构样式 */
-        #toc-container {
-            padding: 15px;
-            border-top: 2px solid #e2e8f0;
-            background: #f8fafc;
+        .book-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.3;
         }
 
-        #toc-title {
+        .book-meta {
             font-size: 0.9rem;
-            color: #718096;
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
         }
 
-        #toc {
-            list-style: none;
+        .book-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
 
-        #toc li {
-            margin-bottom: 6px;
-            line-height: 1.4;
+        .book-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        #toc a {
+        .read-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: var(--primary-gradient);
+            color: white;
             text-decoration: none;
-            color: #4a5568;
-            font-size: 13px;
-            display: block;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
 
-        #toc a:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            transform: translateX(3px);
+        .read-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        /* 缩进层级 */
-        .toc-h1 { margin-left: 0; font-weight: 600; color: #2d3748; }
-        .toc-h2 { margin-left: 12px; }
-        .toc-h3 { margin-left: 24px; font-size: 0.85em; color: #718096; }
+        /* ==================== 第二层：阅读界面 ==================== */
+        #reader-view {
+            display: none;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-        /* 右侧内容样式 */
-        #content-container {
+        .reader-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 左侧目录栏 */
+        .reader-sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+
+        .current-book-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .toc-section {
             flex: 1;
             overflow-y: auto;
-            padding: 40px;
+            padding: 20px;
+        }
+
+        .toc-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        #toc-list {
+            list-style: none;
+        }
+
+        #toc-list li {
+            margin-bottom: 4px;
+        }
+
+        #toc-list a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        #toc-list a:hover {
+            background: rgba(102, 126, 234, 0.08);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        #toc-list a.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* 层级缩进 */
+        .toc-h1 { font-weight: 600; color: var(--text-primary); }
+        .toc-h2 { padding-left: 25px !important; }
+        .toc-h3 { padding-left: 40px !important; font-size: 0.85rem !important; }
+
+        /* 右侧内容区 */
+        .reader-content {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
             scroll-behavior: smooth;
         }
 
         .content-wrapper {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            min-height: calc(100vh - 80px);
-            overflow: hidden;
-        }
-
-        .markdown-body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 900px;
+            max-width: 850px;
             margin: 0 auto;
-            padding: 40px;
+            padding: 50px 40px;
+            min-height: 100%;
         }
 
-        /* 自定义滚动条 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.5);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.8);
-        }
-
-        /* 加载动画 */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            color: #667eea;
+        /* Markdown 内容样式优化 */
+        .markdown-body {
             font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-primary);
         }
 
-        .loading::after {
-            content: "";
-            width: 20px;
-            height: 20px;
-            border: 2px solid #667eea;
-            border-top-color: transparent;
-            border-radius: 50%;
-            margin-left: 10px;
-            animation: spin 1s linear infinite;
+        .markdown-body h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 20px;
+            margin-top: 0;
+            margin-bottom: 30px;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* 错误提示样式 */
-        .error-message {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px;
-            box-shadow: 0 4px 15px rgba(238, 90, 90, 0.3);
-        }
-
-        /* 空状态样式 */
-        .empty-state {
-            text-align: center;
-            padding: 100px 20px;
-            color: #a0aec0;
-        }
-
-        .empty-state-icon {
-            font-size: 4rem;
+        .markdown-body h2 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-top: 50px;
             margin-bottom: 20px;
-            opacity: 0.5;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
         }
 
-        .empty-state h3 {
-            color: #4a5568;
-            margin-bottom: 10px;
-            font-size: 1.5rem;
+        .markdown-body h3 {
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+            margin-top: 30px;
         }
 
-        /* 代码块样式优化 */
+        .markdown-body p {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
         .markdown-body pre {
             background: #1a202c;
             border-radius: 12px;
-            padding: 20px;
+            padding: 25px;
             overflow-x: auto;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 25px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .markdown-body code {
-            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
             font-size: 0.9em;
         }
 
         .markdown-body :not(pre) > code {
             background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            padding: 2px 8px;
-            border-radius: 4px;
+            color: var(--accent-color);
+            padding: 3px 10px;
+            border-radius: 6px;
             font-weight: 600;
         }
 
-        /* 引用块样式 */
         .markdown-body blockquote {
-            border-left: 4px solid #667eea;
-            background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
-            padding: 20px;
+            border-left: 4px solid var(--accent-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            padding: 25px;
             border-radius: 0 12px 12px 0;
-            color: #4a5568;
+            margin: 25px 0;
+            color: var(--text-secondary);
+            font-style: italic;
         }
 
-        /* 表格样式 */
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin: 25px 0;
+        }
+
         .markdown-body table {
+            width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            width: 100%;
+            margin: 25px 0;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
         .markdown-body th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--primary-gradient);
             color: white;
-            font-weight: 600;
             padding: 15px;
+            font-weight: 600;
+            text-align: left;
         }
 
         .markdown-body td {
@@ -304,83 +396,169 @@
         }
 
         .markdown-body tr:nth-child(even) {
-            background: #f7fafc;
+            background: #f8fafc;
         }
 
         .markdown-body tr:hover {
-            background: rgba(102, 126, 234, 0.05);
+            background: rgba(102, 126, 234, 0.03);
         }
 
-        /* 标题样式优化 */
-        .markdown-body h1 {
-            color: #2d3748;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 15px;
-            margin-top: 0;
-        }
-
-        .markdown-body h2 {
-            color: #4a5568;
-            margin-top: 40px;
-        }
-
-        .markdown-body h3 {
-            color: #718096;
-        }
-
-        /* 链接样式 */
         .markdown-body a {
-            color: #667eea;
+            color: var(--accent-color);
             text-decoration: none;
             border-bottom: 2px solid transparent;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .markdown-body a:hover {
-            border-bottom-color: #667eea;
+            border-bottom-color: var(--accent-color);
         }
 
-        /* 列表样式 */
         .markdown-body ul, .markdown-body ol {
-            padding-left: 25px;
+            padding-left: 30px;
+            margin: 20px 0;
         }
 
         .markdown-body li {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .markdown-body li::marker {
-            color: #667eea;
+            color: var(--accent-color);
         }
 
-        /* 分割线 */
         .markdown-body hr {
             border: none;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            margin: 40px 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            margin: 50px 0;
+        }
+
+        /* 加载和错误状态 */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(102, 126, 234, 0.1);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #e53e3e;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            #library-view {
+                padding: 20px;
+            }
+
+            .library-header h1 {
+                font-size: 2rem;
+            }
+
+            .books-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 10px;
+            }
+
+            .reader-sidebar {
+                position: fixed;
+                left: -100%;
+                transition: left 0.3s ease;
+                width: 85%;
+                max-width: 300px;
+            }
+
+            .reader-sidebar.open {
+                left: 0;
+            }
+
+            .content-wrapper {
+                padding: 30px 20px;
+            }
+
+            .markdown-body h1 {
+                font-size: 1.8rem;
+            }
+
+            .markdown-body h2 {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            z-index: 1000;
         }
 
         @media (max-width: 768px) {
-            body { 
-                flex-direction: column;
-                overflow: auto;
-            }
-            #sidebar { 
-                width: 100%; 
-                height: auto; 
-                max-height: 50vh;
-                border-right: none; 
-                border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            }
-            #content-container { 
-                padding: 20px;
-            }
-            .markdown-body { 
-                padding: 20px;
-            }
-            .content-wrapper {
-                min-height: auto;
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         }
     </style>
@@ -388,91 +566,158 @@
 </head>
 <body>
 
-    <!-- 左侧目录 -->
-    <aside id="sidebar">
-        <div id="sidebar-header">
-            <h2>文档浏览器</h2>
-        </div>
-        <ul id="file-list">
-            <!-- 文件列表将通过 JS 动态生成 -->
-        </ul>
-        <div id="toc-container" style="display: none;">
-            <div id="toc-title">📋 目录结构</div>
-            <ul id="toc">
-                <!-- 目录将通过 JS 动态生成 -->
-            </ul>
-        </div>
-    </aside>
+    <!-- ==================== 第一层：图书馆首页 ==================== -->
+    <div id="library-view">
+        <header class="library-header">
+            <h1>📚 我的数字图书馆</h1>
+            <p>选择一本书开始阅读之旅</p>
+        </header>
 
-    <!-- 右侧内容 -->
-    <main id="content-container">
-        <div class="content-wrapper">
-            <article id="main-content" class="markdown-body">
-                <div class="empty-state">
-                    <div class="empty-state-icon">📄</div>
-                    <h3>欢迎使用 Markdown 预览器</h3>
-                    <p>请从左侧选择一个文件开始阅读</p>
-                </div>
-            </article>
+        <div class="books-grid" id="books-container">
+            <!-- 书籍卡片将通过 JS 动态生成 -->
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>正在加载书库...</p>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <!-- ==================== 第二层：阅读界面 ==================== -->
+    <div id="reader-view">
+        <div class="reader-container">
+            <!-- 左侧目录 -->
+            <aside class="reader-sidebar" id="reader-sidebar">
+                <div class="sidebar-header">
+                    <a class="back-btn" onclick="backToLibrary()">
+                        ← 返回书库
+                    </a>
+                    <div class="current-book-title" id="current-book-title">书名</div>
+                </div>
+
+                <div class="toc-section">
+                    <div class="toc-title">目录导航</div>
+                    <ul id="toc-list">
+                        <!-- 目录将通过 JS 动态生成 -->
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- 右侧内容 -->
+            <main class="reader-content" id="reader-content">
+                <div class="content-wrapper">
+                    <article id="markdown-content" class="markdown-body">
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>正在加载内容...</p>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+
+        <!-- 移动端菜单按钮 -->
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    </div>
 
     <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
     <script>
-        // 配置文件列表地址
+        // 配置
         const fileListUrl = './files.json';
-        const contentEl = document.getElementById('main-content');
-        const fileListEl = document.getElementById('file-list');
-        const tocContainer = document.getElementById('toc-container');
-        const tocUl = document.getElementById('toc');
+        let currentBook = null;
+        let booksData = [];
 
-        let currentFile = null;
-
+        // 初始化
         async function init() {
             try {
-                // 加载文件列表
                 const response = await fetch(fileListUrl);
                 if (!response.ok) throw new Error('无法加载文件列表');
-                const files = await response.json();
+                booksData = await response.json();
 
-                // 生成文件导航菜单
-                files.forEach((file, index) => {
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.textContent = file.name;
-                    a.dataset.url = file.url;
-                    a.onclick = (e) => {
-                        e.preventDefault();
-                        loadMarkdown(file.url, a);
-                    };
-                    li.appendChild(a);
-                    fileListEl.appendChild(li);
-                });
-
+                renderBooksGrid(booksData);
             } catch (err) {
-                fileListEl.innerHTML = `<li class="error-message">错误: ${err.message}</li>`;
+                document.getElementById('books-container').innerHTML = `
+                    <div class="error-state" style="grid-column: 1/-1;">
+                        <h3>❌ 加载失败</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
             }
         }
 
-        async function loadMarkdown(url, element) {
+        // 渲染书籍网格
+        function renderBooksGrid(books) {
+            const container = document.getElementById('books-container');
+
+            if (books.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-icon">📭</div>
+                        <h3>书库为空</h3>
+                        <p>暂无书籍可供阅读</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = books.map((book, index) => `
+                <div class="book-card" onclick="openBook(${index})">
+                    <div class="book-cover">
+                        ${book.cover || '📖'}
+                    </div>
+                    <div class="book-info">
+                        <div class="book-title">${book.name}</div>
+                        <div class="book-meta">${book.author || '未知作者'} · ${book.category || '未分类'}</div>
+                        <div class="book-stats">
+                            <span class="book-stat">
+                                <span>📄</span>
+                                <span>${book.pages || '?'} 页</span>
+                            </span>
+                            <span class="book-stat">
+                                <span>⏱</span>
+                                <span>${book.readTime || '?'} 分钟</span>
+                            </span>
+                        </div>
+                        <button class="read-btn">开始阅读</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 打开书籍
+        async function openBook(index) {
+            const book = booksData[index];
+            if (!book) return;
+
+            currentBook = book;
+
+            // 切换到阅读视图
+            document.getElementById('library-view').style.display = 'none';
+            document.getElementById('reader-view').style.display = 'block';
+
+            // 更新书名
+            document.getElementById('current-book-title').textContent = book.name;
+
+            // 重置内容区
+            document.getElementById('markdown-content').innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>正在加载《${book.name}》...</p>
+                </div>
+            `;
+
+            // 清空目录
+            document.getElementById('toc-list').innerHTML = '';
+
             try {
-                // 更新激活状态
-                document.querySelectorAll('#file-list a').forEach(a => a.classList.remove('active'));
-                if (element) element.classList.add('active');
-
-                currentFile = url;
-
-                // 显示加载状态
-                contentEl.innerHTML = '<div class="loading">正在加载文档</div>';
-
-                // 获取 Markdown 内容
-                const response = await fetch(url);
+                // 加载 Markdown 内容
+                const response = await fetch(book.url);
                 if (!response.ok) throw new Error('无法读取文件');
                 const mdText = await response.text();
 
-                // 配置 marked 并渲染
+                // 配置 marked
                 marked.setOptions({
                     highlight: function(code, lang) {
                         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -482,57 +727,105 @@
                     breaks: true
                 });
 
+                // 渲染内容
+                const contentEl = document.getElementById('markdown-content');
                 contentEl.innerHTML = marked.parse(mdText);
 
                 // 生成目录
                 generateTOC(contentEl);
-
-                // 显示目录容器
-                tocContainer.style.display = 'block';
 
                 // 高亮代码
                 document.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightBlock(block);
                 });
 
+                // 滚动到顶部
+                document.getElementById('reader-content').scrollTop = 0;
+
             } catch (err) {
-                contentEl.innerHTML = `<div class="error-message">❌ 错误: ${err.message}</div>`;
+                document.getElementById('markdown-content').innerHTML = `
+                    <div class="error-state">
+                        <h3>❌ 加载失败</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
             }
         }
 
+        // 生成目录
         function generateTOC(contentEl) {
-            tocUl.innerHTML = '';
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = '';
 
-            // 查找所有标题
             const headings = contentEl.querySelectorAll('h1, h2, h3');
 
             if (headings.length === 0) {
-                tocContainer.style.display = 'none';
+                tocList.innerHTML = '<li style="color: #a0aec0; padding: 10px;">暂无目录</li>';
                 return;
             }
 
             headings.forEach((heading, index) => {
-                // 为标题添加 ID 方便跳转
-                const id = 'heading-' + index;
+                const id = `heading-${index}`;
                 heading.setAttribute('id', id);
 
-                // 创建目录项
                 const li = document.createElement('li');
-                li.classList.add('toc-' + heading.tagName.toLowerCase());
-
                 const a = document.createElement('a');
-                a.href = '#' + id;
+
                 a.textContent = heading.textContent;
+                a.className = `toc-${heading.tagName.toLowerCase()}`;
                 a.onclick = (e) => {
                     e.preventDefault();
-                    document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // 移除其他激活状态
+                    tocList.querySelectorAll('a').forEach(link => link.classList.remove('active'));
+                    // 添加当前激活状态
+                    a.classList.add('active');
+                    // 平滑滚动
+                    heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 };
 
                 li.appendChild(a);
-                tocUl.appendChild(li);
+                tocList.appendChild(li);
             });
         }
 
+        // 返回书库
+        function backToLibrary() {
+            document.getElementById('reader-view').style.display = 'none';
+            document.getElementById('library-view').style.display = 'flex';
+            currentBook = null;
+
+            // 关闭移动端侧边栏
+            document.getElementById('reader-sidebar').classList.remove('open');
+        }
+
+        // 切换移动端侧边栏
+        function toggleSidebar() {
+            document.getElementById('reader-sidebar').classList.toggle('open');
+        }
+
+        // 监听滚动，更新目录激活状态
+        document.getElementById('reader-content').addEventListener('scroll', () => {
+            const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3');
+            const tocLinks = document.querySelectorAll('#toc-list a');
+
+            let current = '';
+            const scrollPos = document.getElementById('reader-content').scrollTop + 100;
+
+            headings.forEach((heading, index) => {
+                if (heading.offsetTop <= scrollPos) {
+                    current = `heading-${index}`;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 启动
         init();
     </script>
 </body>
