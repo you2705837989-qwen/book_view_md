@@ -1181,11 +1181,7 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <!-- 新增的通用分类 -->
-                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
-                                <span>全部书籍</span>
-                                <span class="book-count" id="count-all">0</span>
-                            </div>
+
                             <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
                                 <span>教材</span>
                                 <span class="book-count">0</span>
@@ -1646,12 +1642,12 @@
             <!-- 内容区域 -->
             <main class="content-area" id="content-area">
                 <div class="breadcrumb" id="breadcrumb">
-                    <span class="breadcrumb-item">大学教材</span>
+                    <span class="breadcrumb-item">教材</span>
                     <span class="breadcrumb-item">工学</span>
-                    <span class="breadcrumb-item active">全部教材</span>
+                    <span class="breadcrumb-item active">教材</span>
                 </div>
                 
-                <h2 class="section-title" id="section-title">全部教材</h2>
+                <h2 class="section-title" id="section-title">教材</h2>
                 
                 <div class="books-grid" id="books-container">
                     <div class="loading-state" style="grid-column: 1/-1;">
@@ -1808,7 +1804,7 @@
             document.querySelectorAll('.subcategory-item').forEach(item => {
                 const text = item.querySelector('span:first-child').textContent;
                 const countEl = item.querySelector('.book-count');
-                if (text === '全部教材') countEl.textContent = counts.all;
+                if (text === '教材') countEl.textContent = counts.all;
                 else if (text === '计算机类') countEl.textContent = counts.computer;
                 else if (text === '电子信息') countEl.textContent = counts.electronics;
                 else if (text === '机械工程') countEl.textContent = counts.mechanical;
@@ -1835,9 +1831,9 @@
 
             // 更新面包屑
             const names = {
-                university: '大学教材',
+                university: '大学',
                 exam: '职业考试',
-                k12: '小初高教材'
+                k12: '小初高'
             };
             updateBreadcrumb([names[category]]);
         }
@@ -1859,8 +1855,8 @@
             element.classList.add('active');
 
             // 更新面包屑和标题
-            const mainName = currentMainCategory === 'university' ? '大学教材' : 
-                           currentMainCategory === 'exam' ? '职业考试' : '小初高教材';
+            const mainName = currentMainCategory === 'university' ? '大学' : 
+                           currentMainCategory === 'exam' ? '职业考试' : '小初高';
             const parentName = element.closest('.category-section').querySelector('.category-header span:nth-child(2)').textContent;
             updateBreadcrumb([mainName, parentName, name]);
             document.getElementById('section-title').textContent = name;
