@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>教材转录预览系统</title>
+    <title>教材转录预览 - 三栏阅读器</title>
 
     <!-- 引入 GitHub 暗黑风格 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css">
@@ -18,38 +18,43 @@
         }
 
         :root {
-            /* 暗黑主题配色系统 */
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-tertiary: #1a1a25;
-            --bg-elevated: #222230;
-            --bg-hover: #2a2a3a;
+            /* 暗黑主题配色系统 - GitHub Dark Dimmed 风格 */
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-elevated: #1c2128;
 
-            --border-default: #2d2d3d;
-            --border-muted: #1f1f2e;
+            --border-default: #30363d;
+            --border-muted: #21262d;
 
-            --text-primary: #f0f0f5;
-            --text-secondary: #a0a0b0;
-            --text-muted: #6e6e80;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --text-link: #58a6ff;
+            --text-accent: #79c0ff;
 
-            /* 蓝紫色渐变系统 */
             --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
             --accent-purple: #a371f7;
-            --accent-violet: #8957e5;
-            --gradient-primary: linear-gradient(135deg, #58a6ff 0%, #a371f7 50%, #8957e5 100%);
-            --gradient-hover: linear-gradient(135deg, #6cb6ff 0%, #b388f7 50%, #9b6bf5 100%);
-            --gradient-subtle: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%);
-            
+            --accent-orange: #f0883e;
+            --accent-red: #f85149;
+
+            /* 渐变强调色 */
+            --gradient-primary: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+            --gradient-success: linear-gradient(135deg, #238636 0%, #3fb950 100%);
+            --gradient-warm: linear-gradient(135deg, #f0883e 0%, #f85149 100%);
+
+            /* 阴影系统 - 暗黑模式 */
             --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
             --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.5);
             --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.6);
-            --shadow-glow: 0 0 30px rgba(88, 166, 255, 0.2);
+            --shadow-glow: 0 0 20px rgba(88, 166, 255, 0.15);
 
             /* 布局变量 */
             --toc-width: 300px;
             --content-width: 45%;
             --pdf-width: 35%;
-            --sidebar-width: 260px;
+            --header-height: 60px;
 
             /* 字体系统 */
             --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
@@ -60,312 +65,95 @@
             font-family: var(--font-sans);
             background: var(--bg-primary);
             min-height: 100vh;
+            overflow-x: hidden;
             color: var(--text-primary);
             line-height: 1.6;
         }
 
         /* ==================== 滚动条美化 ==================== */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
         }
 
         ::-webkit-scrollbar-track {
             background: var(--bg-secondary);
-            border-radius: 3px;
+            border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb {
             background: var(--border-default);
-            border-radius: 3px;
+            border-radius: 4px;
+            border: 2px solid var(--bg-secondary);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-purple);
+            background: var(--text-muted);
         }
 
-        /* ==================== 顶部导航栏 ==================== */
-        .top-header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-default);
-            padding: 0 40px;
-            height: 70px;
+        /* ==================== 第一层：图书馆首页 ==================== */
+        #library-view {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-img {
-            height: 40px;
-            width: auto;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-
-        .header-nav {
-            display: flex;
-            gap: 8px;
-        }
-
-        .nav-btn {
-            padding: 10px 24px;
-            border: none;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-
-        .nav-btn:hover {
-            color: var(--text-primary);
-            background: var(--bg-tertiary);
-        }
-
-        .nav-btn.active {
-            background: var(--gradient-subtle);
-            color: var(--accent-blue);
-            box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.3);
-        }
-
-        /* ==================== 搜索区域 ==================== */
-        .search-section {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-default);
-            padding: 30px 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .search-container {
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 40px;
+            background: var(--bg-primary);
             position: relative;
-            width: 100%;
-            max-width: 600px;
         }
 
-        .search-input {
-            width: 100%;
-            padding: 16px 24px 16px 50px;
-            background: var(--bg-tertiary);
-            border: 2px solid var(--border-default);
-            border-radius: 30px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .search-input:focus {
-            border-color: transparent;
-            background: var(--bg-elevated);
-            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3), 
-                        0 0 20px rgba(88, 166, 255, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--accent-blue);
-            font-size: 1.2rem;
-            pointer-events: none;
-        }
-
-        .search-glow {
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: var(--gradient-primary);
-            border-radius: 30px;
-            opacity: 0;
-            z-index: -1;
-            transition: opacity 0.3s ease;
-            filter: blur(8px);
-        }
-
-        .search-container:focus-within .search-glow {
-            opacity: 0.4;
-        }
-
-        /* ==================== 主布局 ==================== */
-        .main-layout {
-            display: flex;
-            min-height: calc(100vh - 70px - 88px);
-        }
-
-        /* ==================== 左侧分类导航 ==================== */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-default);
-            padding: 24px 0;
-            overflow-y: auto;
-            position: sticky;
-            top: 70px;
-            height: calc(100vh - 70px);
-        }
-
-        .category-section {
-            margin-bottom: 8px;
-        }
-
-        .category-header {
-            padding: 12px 24px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-        }
-
-        .category-header:hover {
-            background: var(--bg-tertiary);
-            border-left-color: var(--accent-purple);
-        }
-
-        .category-icon {
-            font-size: 1.1rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        .category-arrow {
-            margin-left: auto;
-            font-size: 0.8rem;
-            transition: transform 0.3s;
-            color: var(--text-muted);
-        }
-
-        .category-section.expanded .category-arrow {
-            transform: rotate(90deg);
-        }
-
-        .subcategory-list {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-
-        .category-section.expanded .subcategory-list {
-            max-height: 500px;
-        }
-
-        .subcategory-item {
-            padding: 10px 24px 10px 48px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .subcategory-item:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            padding-left: 52px;
-        }
-
-        .subcategory-item.active {
-            background: var(--gradient-subtle);
-            color: var(--accent-blue);
-            border-left-color: var(--accent-blue);
-            font-weight: 500;
-        }
-
-        .book-count {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            background: var(--bg-elevated);
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-
-        .subcategory-item.active .book-count {
-            background: rgba(88, 166, 255, 0.2);
-            color: var(--accent-blue);
-        }
-
-        /* ==================== 内容区域 ==================== */
-        .content-area {
-            flex: 1;
-            padding: 32px 40px;
-            overflow-y: auto;
-        }
-
-        .breadcrumb {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .breadcrumb-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .breadcrumb-item:not(:last-child)::after {
-            content: "›";
-            color: var(--text-muted);
-        }
-
-        .breadcrumb-item.active {
-            color: var(--accent-blue);
-            font-weight: 500;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-title::before {
+        /* 背景装饰 */
+        #library-view::before {
             content: "";
-            width: 4px;
-            height: 24px;
-            background: var(--gradient-primary);
-            border-radius: 2px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(163, 113, 247, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(240, 136, 62, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* ==================== 书籍网格 ==================== */
+        .library-header {
+            text-align: center;
+            margin-bottom: 60px;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .library-header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            text-shadow: none;
+        }
+
+        .library-header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
         .books-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 1;
         }
 
         .book-card {
@@ -374,16 +162,17 @@
             overflow: hidden;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow-sm);
+            box-shadow: var(--shadow-md);
+            position: relative;
             border: 1px solid var(--border-default);
             display: flex;
             flex-direction: column;
         }
 
         .book-card:hover {
-            transform: translateY(-6px);
+            transform: translateY(-8px);
             box-shadow: var(--shadow-lg), var(--shadow-glow);
-            border-color: rgba(88, 166, 255, 0.3);
+            border-color: var(--accent-blue);
         }
 
         .book-cover {
@@ -403,11 +192,6 @@
             object-fit: contain;
             object-position: center;
             display: block;
-            transition: transform 0.3s ease;
-        }
-
-        .book-card:hover .book-cover img {
-            transform: scale(1.05);
         }
 
         .book-cover-placeholder {
@@ -416,60 +200,110 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.5rem;
+            font-size: 4rem;
             background: var(--gradient-primary);
         }
 
         .book-info {
-            padding: 16px;
+            padding: 20px;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            min-height: 140px;
         }
 
         .book-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: var(--text-primary);
+            margin-bottom: 8px;
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            min-height: 2.8em;
         }
 
         .book-meta {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .book-tags {
+        .book-features {
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            margin-bottom: 16px;
             margin-top: auto;
-            padding-top: 8px;
         }
 
-        .tag {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 4px;
+        .feature-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
             font-weight: 500;
+            border: 1px solid var(--border-muted);
         }
 
-        .tag-md {
-            background: rgba(88, 166, 255, 0.15);
+        .feature-tag.markdown {
             color: var(--accent-blue);
+            border-color: rgba(88, 166, 255, 0.3);
+            background: rgba(88, 166, 255, 0.1);
         }
 
-        .tag-pdf {
-            background: rgba(163, 113, 247, 0.15);
-            color: var(--accent-purple);
+        .feature-tag.pdf {
+            color: var(--accent-orange);
+            border-color: rgba(240, 136, 62, 0.3);
+            background: rgba(240, 136, 62, 0.1);
+        }
+
+        .read-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            margin-top: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .read-btn::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .read-btn:hover::before {
+            left: 100%;
+        }
+
+        .read-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
         }
 
         /* ==================== 第二层：三栏阅读界面 ==================== */
@@ -592,6 +426,17 @@
             font-weight: 600;
         }
 
+        #toc-list a.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-blue);
+            border-radius: 0 2px 2px 0;
+        }
+
         /* 层级缩进 */
         .toc-h1 { 
             font-weight: 600; 
@@ -620,7 +465,7 @@
         .content-header {
             position: sticky;
             top: 0;
-            background: rgba(10, 10, 15, 0.95);
+            background: rgba(13, 17, 23, 0.95);
             backdrop-filter: blur(12px);
             padding: 16px 30px;
             border-bottom: 1px solid var(--border-default);
@@ -721,6 +566,14 @@
             font-weight: 600;
         }
 
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
         .markdown-body p {
             margin-bottom: 1.25rem;
             text-align: justify;
@@ -757,7 +610,7 @@
 
         .markdown-body :not(pre) > code {
             background: rgba(110, 118, 129, 0.4);
-            color: var(--accent-blue);
+            color: var(--text-accent);
             padding: 0.2em 0.4em;
             border-radius: 6px;
             font-weight: 500;
@@ -819,15 +672,19 @@
             background: rgba(88, 166, 255, 0.05);
         }
 
+        .markdown-body tr:last-child td {
+            border-bottom: none;
+        }
+
         .markdown-body a {
-            color: var(--accent-blue);
+            color: var(--text-link);
             text-decoration: none;
             border-bottom: 1px solid transparent;
             transition: all 0.2s;
         }
 
         .markdown-body a:hover {
-            border-bottom-color: var(--accent-blue);
+            border-bottom-color: var(--text-link);
         }
 
         .markdown-body ul, .markdown-body ol {
@@ -842,6 +699,22 @@
 
         .markdown-body li::marker {
             color: var(--accent-blue);
+        }
+
+        .markdown-body hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-default), transparent);
+            margin: 3rem 0;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body em {
+            color: var(--text-accent);
         }
 
         /* 右侧：PDF 阅读器 */
@@ -875,13 +748,13 @@
         .pdf-title-icon {
             width: 32px;
             height: 32px;
-            background: rgba(163, 113, 247, 0.15);
+            background: rgba(240, 136, 62, 0.15);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
-            border: 1px solid rgba(163, 113, 247, 0.3);
+            border: 1px solid rgba(240, 136, 62, 0.3);
         }
 
         .pdf-actions {
@@ -949,6 +822,33 @@
             background: var(--bg-secondary);
         }
 
+        .pdf-placeholder-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-default);
+        }
+
+        .pdf-placeholder h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .pdf-placeholder p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            max-width: 200px;
+            line-height: 1.5;
+        }
+
         /* 拖拽调整宽度 */
         .resize-handle {
             width: 6px;
@@ -1010,11 +910,16 @@
         .error-state {
             text-align: center;
             padding: 40px;
-            color: var(--accent-violet);
-            background: rgba(137, 87, 229, 0.1);
+            color: var(--accent-red);
+            background: rgba(248, 81, 73, 0.1);
             border-radius: 12px;
-            border: 1px solid rgba(137, 87, 229, 0.3);
+            border: 1px solid rgba(248, 81, 73, 0.3);
             margin: 20px;
+        }
+
+        .error-state h3 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
         }
 
         .empty-state {
@@ -1023,69 +928,45 @@
             color: var(--text-muted);
         }
 
-        /* 响应式设计 */
-        @media (max-width: 1200px) {
-            :root {
-                --toc-width: 260px;
-                --content-width: 50%;
-                --pdf-width: 30%;
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* 同步滚动指示器 */
+        .sync-indicator {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            .sidebar {
-                width: 220px;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        @media (max-width: 992px) {
-            .main-layout {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                top: 0;
-                border-right: none;
-                border-bottom: 1px solid var(--border-default);
-            }
-            .search-section {
-                padding: 20px;
-            }
-            .reader-container {
-                flex-direction: column;
-            }
-            .toc-sidebar,
-            .content-panel,
-            .pdf-panel {
-                width: 100% !important;
-                height: 33.33vh;
-                border-right: none;
-                border-bottom: 1px solid var(--border-default);
-            }
-            .pdf-panel {
-                border-bottom: none;
-            }
-            .resize-handle {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .top-header {
-                padding: 0 20px;
-            }
-            .logo-img {
-                height: 32px;
-            }
-            .content-area {
-                padding: 20px;
-            }
-            .books-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 20px;
-            }
-            .search-container {
-                max-width: 100%;
-            }
+        .sync-indicator.show {
+            display: flex;
         }
 
         /* 拖拽遮罩 */
@@ -1104,187 +985,149 @@
         .resize-overlay.active {
             display: block;
         }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            :root {
+                --toc-width: 260px;
+                --content-width: 50%;
+                --pdf-width: 30%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .reader-container {
+                flex-direction: column;
+            }
+
+            .toc-sidebar,
+            .content-panel,
+            .pdf-panel {
+                width: 100% !important;
+                height: 33.33vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border-default);
+            }
+
+            .pdf-panel {
+                border-bottom: none;
+            }
+
+            .resize-handle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #library-view {
+                padding: 20px;
+            }
+
+            .library-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .books-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 20px;
+            }
+
+            .content-wrapper {
+                padding: 20px;
+            }
+
+            .markdown-body h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* PDF 控制栏 */
+        .pdf-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-default);
+            justify-content: center;
+        }
+
+        .pdf-page-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .pdf-nav-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-default);
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .pdf-nav-btn:hover:not(:disabled) {
+            background: var(--border-default);
+            color: var(--text-primary);
+            border-color: var(--accent-blue);
+        }
+
+        .pdf-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pdf-zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .pdf-zoom-slider {
+            width: 100px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: var(--border-default);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .pdf-zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            cursor: pointer;
+        }
     </style>
+<base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
     <!-- ==================== 第一层：图书馆首页 ==================== -->
     <div id="library-view">
-        <!-- 顶部导航 -->
-        <header class="top-header">
-            <div class="logo-section">
-                <img src="https://raw.githubusercontent.com/you2705837989-qwen/book_view_md/main/data/view.jpg" alt="Logo" class="logo-img">
-            </div>
-            <nav class="header-nav">
-                <button class="nav-btn active" onclick="switchMainCategory('university')">大学教材</button>
-                <button class="nav-btn" onclick="switchMainCategory('exam')">职业考试</button>
-                <button class="nav-btn" onclick="switchMainCategory('k12')">小初高教材</button>
-            </nav>
+        <header class="library-header">
+            <h1>📚 教材转录预览</h1>
+            <p>选择一本书，体验 Markdown + PDF 双栏同步阅读</p>
         </header>
 
-        <!-- 搜索区域 -->
-        <div class="search-section">
-            <div class="search-container">
-                <div class="search-glow"></div>
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="搜索教材名称、作者、ISBN...">
+        <div class="books-grid" id="books-container">
+            <div class="loading-state" style="grid-column: 1/-1;">
+                <div class="spinner"></div>
+                <p>正在加载书库...</p>
             </div>
-        </div>
-
-        <div class="main-layout">
-            <!-- 左侧分类导航 -->
-            <aside class="sidebar" id="sidebar">
-                <!-- 大学教材分类 -->
-                <div id="university-categories">
-                    <div class="category-section expanded" data-category="engineering">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">⚙️</span>
-                            <span>工学</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部工科教材', this)">
-                                <span>全部工科教材</span>
-                                <span class="book-count" id="count-all">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('computer', '计算机类', this)">
-                                <span>计算机类</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('electronics', '电子信息', this)">
-                                <span>电子信息</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('mechanical', '机械工程', this)">
-                                <span>机械工程</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('civil', '土木建筑', this)">
-                                <span>土木建筑</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="category-section" data-category="science">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">🔬</span>
-                            <span>理学</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('math', '数学', this)">
-                                <span>数学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('physics', '物理', this)">
-                                <span>物理</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('chemistry', '化学', this)">
-                                <span>化学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="category-section" data-category="medicine">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">🏥</span>
-                            <span>医学</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('basic-med', '基础医学', this)">
-                                <span>基础医学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('clinical', '临床医学', this)">
-                                <span>临床医学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="category-section" data-category="law-arts">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">⚖️</span>
-                            <span>文法类</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('law', '法学', this)">
-                                <span>法学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('literature', '文学', this)">
-                                <span>文学</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 职业考试分类（默认隐藏） -->
-                <div id="exam-categories" style="display: none;">
-                    <div class="category-section expanded">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">📋</span>
-                            <span>工程类考试</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item">
-                                <span>一级建造师</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item">
-                                <span>二级建造师</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 小初高分类（默认隐藏） -->
-                <div id="k12-categories" style="display: none;">
-                    <div class="category-section expanded">
-                        <div class="category-header" onclick="toggleCategory(this)">
-                            <span class="category-icon">🎒</span>
-                            <span>高中教材</span>
-                            <span class="category-arrow">›</span>
-                        </div>
-                        <div class="subcategory-list">
-                            <div class="subcategory-item">
-                                <span>高一</span>
-                                <span class="book-count">0</span>
-                            </div>
-                            <div class="subcategory-item">
-                                <span>高二</span>
-                                <span class="book-count">0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- 内容区域 -->
-            <main class="content-area" id="content-area">
-                <div class="breadcrumb" id="breadcrumb">
-                    <span class="breadcrumb-item">大学教材</span>
-                    <span class="breadcrumb-item">工学</span>
-                    <span class="breadcrumb-item active">全部工科教材</span>
-                </div>
-                
-                <h2 class="section-title" id="section-title">全部工科教材</h2>
-                
-                <div class="books-grid" id="books-container">
-                    <div class="loading-state" style="grid-column: 1/-1;">
-                        <div class="spinner"></div>
-                        <p>正在加载书库...</p>
-                    </div>
-                </div>
-            </main>
         </div>
     </div>
 
@@ -1303,7 +1146,9 @@
 
                 <div class="toc-content">
                     <div class="toc-section-title">目录导航</div>
-                    <ul id="toc-list"></ul>
+                    <ul id="toc-list">
+                        <!-- 目录将通过 JS 动态生成 -->
+                    </ul>
                 </div>
             </aside>
 
@@ -1356,13 +1201,20 @@
 
                 <div class="pdf-container" id="pdf-container">
                     <div class="pdf-placeholder" id="pdf-placeholder">
-                        <div class="spinner"></div>
-                        <p>正在加载 PDF...</p>
+                        <div class="pdf-placeholder-icon">📑</div>
+                        <h3>PDF 预览区</h3>
+                        <p>选择书籍后将在此处显示 PDF 内容</p>
                     </div>
                     <iframe id="pdf-viewer" style="display: none;"></iframe>
                 </div>
             </aside>
         </div>
+    </div>
+
+    <!-- 同步指示器 -->
+    <div class="sync-indicator" id="sync-indicator">
+        <span>🔄</span>
+        <span>已同步到第 <span id="sync-page">1</span> 页</span>
     </div>
 
     <!-- 拖拽遮罩 -->
@@ -1371,6 +1223,7 @@
     <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <!-- PDF.js 用于更好的 PDF 支持 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script>
@@ -1381,7 +1234,6 @@
         const fileListUrl = './files.json';
         let currentBook = null;
         let booksData = [];
-        let filteredBooks = [];
         let fontSize = 16;
         let isResizing = false;
         let currentResizeHandle = null;
@@ -1389,126 +1241,22 @@
         let currentPage = 1;
         let totalPages = 0;
 
-        // 当前选中的分类
-        let currentMainCategory = 'university';
-        let currentSubcategory = 'all';
-
         // 初始化
         async function init() {
             try {
                 const response = await fetch(fileListUrl);
                 if (!response.ok) throw new Error('无法加载文件列表');
                 booksData = await response.json();
-                
-                // 默认全部归类到工科（实际项目中应根据真实分类调整）
-                booksData.forEach(book => {
-                    book.category = book.category || 'engineering';
-                    book.subcategory = book.subcategory || 'computer';
-                });
 
-                updateBookCounts();
-                filterBooks('all');
-                renderBooksGrid(filteredBooks);
+                renderBooksGrid(booksData);
             } catch (err) {
                 document.getElementById('books-container').innerHTML = `
                     <div class="error-state" style="grid-column: 1/-1;">
                         <h3>❌ 加载失败</h3>
                         <p>${err.message}</p>
+                        <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.8;">请确保 files.json 文件存在且格式正确</p>
                     </div>
                 `;
-            }
-        }
-
-        // 更新各分类书籍数量
-        function updateBookCounts() {
-            const counts = {
-                all: booksData.length,
-                computer: booksData.filter(b => b.subcategory === 'computer').length,
-                electronics: booksData.filter(b => b.subcategory === 'electronics').length,
-                mechanical: booksData.filter(b => b.subcategory === 'mechanical').length,
-                civil: booksData.filter(b => b.subcategory === 'civil').length
-            };
-
-            // 更新显示
-            document.querySelectorAll('.subcategory-item').forEach(item => {
-                const text = item.querySelector('span:first-child').textContent;
-                const countEl = item.querySelector('.book-count');
-                if (text === '全部工科教材') countEl.textContent = counts.all;
-                else if (text === '计算机类') countEl.textContent = counts.computer;
-                else if (text === '电子信息') countEl.textContent = counts.electronics;
-                else if (text === '机械工程') countEl.textContent = counts.mechanical;
-                else if (text === '土木建筑') countEl.textContent = counts.civil;
-            });
-        }
-
-        // 切换主分类
-        function switchMainCategory(category) {
-            currentMainCategory = category;
-            
-            // 更新导航按钮状态
-            document.querySelectorAll('.header-nav .nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // 显示对应分类
-            document.getElementById('university-categories').style.display = 'none';
-            document.getElementById('exam-categories').style.display = 'none';
-            document.getElementById('k12-categories').style.display = 'none';
-            
-            document.getElementById(category + '-categories').style.display = 'block';
-
-            // 更新面包屑
-            const names = {
-                university: '大学教材',
-                exam: '职业考试',
-                k12: '小初高教材'
-            };
-            updateBreadcrumb([names[category]]);
-        }
-
-        // 切换分类展开/收起
-        function toggleCategory(header) {
-            const section = header.parentElement;
-            section.classList.toggle('expanded');
-        }
-
-        // 选择子分类
-        function selectSubcategory(subcategory, name, element) {
-            currentSubcategory = subcategory;
-            
-            // 更新选中状态
-            document.querySelectorAll('.subcategory-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            element.classList.add('active');
-
-            // 更新面包屑和标题
-            const mainName = currentMainCategory === 'university' ? '大学教材' : 
-                           currentMainCategory === 'exam' ? '职业考试' : '小初高教材';
-            const parentName = element.closest('.category-section').querySelector('.category-header span:nth-child(2)').textContent;
-            updateBreadcrumb([mainName, parentName, name]);
-            document.getElementById('section-title').textContent = name;
-
-            // 筛选并显示书籍
-            filterBooks(subcategory);
-            renderBooksGrid(filteredBooks);
-        }
-
-        // 更新面包屑
-        function updateBreadcrumb(items) {
-            const breadcrumb = document.getElementById('breadcrumb');
-            breadcrumb.innerHTML = items.map((item, index) => `
-                <span class="breadcrumb-item ${index === items.length - 1 ? 'active' : ''}">${item}</span>
-            `).join('');
-        }
-
-        // 筛选书籍
-        function filterBooks(subcategory) {
-            if (subcategory === 'all') {
-                filteredBooks = booksData;
-            } else {
-                filteredBooks = booksData.filter(book => book.subcategory === subcategory);
             }
         }
 
@@ -1519,16 +1267,16 @@
             if (books.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state" style="grid-column: 1/-1;">
-                        <div class="empty-icon" style="font-size: 4rem; margin-bottom: 20px;">📭</div>
-                        <h3>暂无书籍</h3>
-                        <p>该分类下暂时没有教材</p>
+                        <div class="empty-icon">📭</div>
+                        <h3>书库为空</h3>
+                        <p>暂无书籍可供阅读</p>
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = books.map((book, index) => `
-                <div class="book-card" onclick="openBook(${booksData.indexOf(book)})">
+                <div class="book-card" onclick="openBook(${index})">
                     <div class="book-cover">
                         ${book.book_cover ? `<img src="${book.book_cover}" alt="${book.name} 封面" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
                         <div class="book-cover-placeholder" style="${book.book_cover ? 'display: none;' : ''}">
@@ -1537,11 +1285,10 @@
                     </div>
                     <div class="book-info">
                         <div class="book-title">${book.name}</div>
-                        <div class="book-meta">${book.author || '未知作者'}</div>
-                        <div class="book-tags">
-                            <span class="tag tag-md">Markdown</span>
-                            <span class="tag tag-pdf">PDF</span>
-                        </div>
+                        <button class="read-btn">
+                            <span>开始阅读</span>
+                            <span>→</span>
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -1568,36 +1315,41 @@
             await loadMarkdown(book.url);
         }
 
-        // 加载 PDF
+        // 加载 PDF - 使用多种策略确保兼容性
+        let pageRendering = false;
+        let pageNumPending = null;
+        let canvas = null;
+        let ctx = null;
+
         async function loadPDF(pdfUrl) {
             const placeholder = document.getElementById('pdf-placeholder');
             const viewer = document.getElementById('pdf-viewer');
             const container = document.getElementById('pdf-container');
             
-            if (!pdfUrl) {
-                placeholder.innerHTML = '<p>暂无 PDF 文件</p>';
-                viewer.style.display = 'none';
-                return;
-            }
+            if (!pdfUrl) return;
             
             let fullUrl = pdfUrl;
             if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
                 fullUrl = './' + pdfUrl;
             }
 
+            // 显示加载中
             placeholder.style.display = 'flex';
             placeholder.innerHTML = `<div class="spinner"></div><p>正在加载 PDF...</p>`;
             viewer.style.display = 'none';
             
+            // 移除旧的 canvas
             const oldCanvas = document.getElementById('pdf-canvas-container');
             if (oldCanvas) oldCanvas.remove();
 
             try {
+                // 加载文档
                 const loadingTask = pdfjsLib.getDocument(fullUrl);
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
                 currentPage = 1;
 
+                // 创建容器
                 const canvasContainer = document.createElement('div');
                 canvasContainer.id = 'pdf-canvas-container';
                 canvasContainer.style.cssText = `
@@ -1607,28 +1359,29 @@
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    background: #0a0a0f;
+                    background: #f5f5f5;
                     padding: 20px;
                     box-sizing: border-box;
                 `;
                 
+                // 创建 canvas
                 canvas = document.createElement('canvas');
                 canvas.style.cssText = `
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                     background: white;
                     max-width: 100%;
-                    margin-bottom: 20px;
                 `;
                 canvasContainer.appendChild(canvas);
                 ctx = canvas.getContext('2d');
                 
+                // 创建控制栏
                 const controls = document.createElement('div');
                 controls.style.cssText = `
                     position: sticky;
                     bottom: 0;
-                    background: var(--bg-secondary);
-                    padding: 15px;
-                    border-top: 1px solid var(--border-default);
+                    background: white;
+                    padding: 10px;
+                    border-top: 1px solid #ddd;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -1636,26 +1389,30 @@
                     width: 100%;
                 `;
                 controls.innerHTML = `
-                    <button id="pdf-prev" style="padding: 8px 16px; cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-default); color: var(--text-primary); border-radius: 6px;">上一页</button>
-                    <span style="color: var(--text-secondary); font-weight: 500;"><span id="page-num">1</span> / <span id="page-count">${totalPages}</span></span>
-                    <button id="pdf-next" style="padding: 8px 16px; cursor: pointer; background: var(--bg-tertiary); border: 1px solid var(--border-default); color: var(--text-primary); border-radius: 6px;">下一页</button>
-                    <input type="range" id="page-slider" min="1" max="${totalPages}" value="1" style="width: 100px; accent-color: var(--accent-blue);">
+                    <button id="pdf-prev" style="padding: 5px 15px; cursor: pointer;">上一页</button>
+                    <span id="page-num">1</span> / <span id="page-count">${totalPages}</span>
+                    <button id="pdf-next" style="padding: 5px 15px; cursor: pointer;">下一页</button>
+                    <input type="range" id="page-slider" min="1" max="${totalPages}" value="1" style="width: 100px;">
                 `;
                 canvasContainer.appendChild(controls);
                 
                 container.insertBefore(canvasContainer, viewer);
                 
+                // 绑定事件
                 document.getElementById('pdf-prev').onclick = () => onPrevPage();
                 document.getElementById('pdf-next').onclick = () => onNextPage();
                 document.getElementById('page-slider').oninput = (e) => {
                     queueRenderPage(parseInt(e.target.value));
                 };
                 
+                // 渲染第一页
                 await renderPage(currentPage);
+                
                 placeholder.style.display = 'none';
                 
             } catch (error) {
                 console.error(error);
+                // 失败时回退到 iframe
                 viewer.src = fullUrl;
                 viewer.style.display = 'block';
                 placeholder.style.display = 'none';
@@ -1666,9 +1423,10 @@
             pageRendering = true;
             
             return pdfDoc.getPage(num).then((page) => {
+                // 根据容器宽度计算缩放比例（自适应）
                 const containerWidth = document.getElementById('pdf-container').clientWidth - 60;
                 const viewport = page.getViewport({ scale: 1 });
-                const scale = Math.min(containerWidth / viewport.width, 1.5);
+                const scale = Math.min(containerWidth / viewport.width, 1.5); // 最大1.5倍
                 const scaledViewport = page.getViewport({ scale });
 
                 canvas.height = scaledViewport.height;
@@ -1689,6 +1447,7 @@
                     }
                 });
             }).then(() => {
+                // 更新页码显示
                 document.getElementById('page-num').textContent = num;
                 document.getElementById('page-slider').value = num;
                 currentPage = num;
@@ -1713,16 +1472,177 @@
             queueRenderPage(currentPage + 1);
         }
 
+
+        // 渲染所有页面（简化版，实际使用可改为虚拟滚动）
+        async function renderAllPages(pdfDoc, container) {
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale });
+                
+                const canvas = document.createElement('canvas');
+                canvas.style.cssText = `
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    background: white;
+                    max-width: 100%;
+                `;
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                container.appendChild(canvas);
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                // 添加页码标记
+                const pageLabel = document.createElement('div');
+                pageLabel.textContent = `第 ${i} 页 / 共 ${pdfDoc.numPages} 页`;
+                pageLabel.style.cssText = `
+                    color: #666;
+                    font-size: 12px;
+                    margin-top: -10px;
+                    margin-bottom: 10px;
+                `;
+                container.appendChild(pageLabel);
+            }
+        }
+
+        // 添加 PDF 控制栏（页码、下载、全屏）
+        function addPDFControls(container, pdfUrl) {
+            const controls = document.createElement('div');
+            controls.style.cssText = `
+                position: sticky;
+                bottom: 20px;
+                background: rgba(255,255,255,0.95);
+                padding: 10px 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+                display: flex;
+                gap: 15px;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                margin-top: 20px;
+            `;
+            
+            controls.innerHTML = `
+                <button onclick="this.closest('.pdfjs-canvas').scrollTo({top: 0, behavior: 'smooth'})" 
+                        style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">
+                    顶部
+                </button>
+                <span style="color: #666; font-size: 14px;">PDF.js 渲染模式</span>
+                <a href="${pdfUrl}" download 
+                style="padding: 6px 12px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                    下载 PDF
+                </a>
+            `;
+            
+            container.appendChild(controls);
+        }
+
+        // PDF 加载失败提示
+        function showPDFError(placeholder, pdfUrl) {
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+                    <h3>PDF 已在新的标签页打开或开始下载</h3>
+                    <p style="color: #666; margin: 16px 0;">如果未自动开始，请点击下方按钮</p>
+                    <a href="${pdfUrl}" target="_blank" 
+                    style="display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 6px; margin-top: 10px;">
+                        打开 PDF
+                    </a>
+                </div>
+            `;
+        }
+
+        // 修改 openPdfFullscreen 函数，支持 PDF.js 模式
+        function openPdfFullscreen() {
+            const pdfUrl = currentBook?.pdfUrl;
+            if (!pdfUrl) return;
+            
+            let fullUrl = pdfUrl;
+            if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+                fullUrl = './' + pdfUrl;
+            }
+            
+            // 使用 Mozilla 的在线查看器（终极后备方案）
+            const mozillaViewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}`;
+            window.open(mozillaViewer, '_blank');
+        }
+
+
+
+        // function loadPDF(pdfUrl) {
+        //     const placeholder = document.getElementById('pdf-placeholder');
+        //     const viewer = document.getElementById('pdf-viewer');
+        //     const downloadBtn = document.getElementById('pdf-download-btn');
+
+        //     if (!pdfUrl) {
+        //         placeholder.style.display = 'flex';
+        //         viewer.style.display = 'none';
+        //         downloadBtn.style.display = 'none';
+        //         placeholder.innerHTML = `
+        //             <div class="pdf-placeholder-icon">📑</div>
+        //             <h3>暂无 PDF 文件</h3>
+        //             <p>本书未提供 PDF 版本</p>
+        //         `;
+        //         return;
+        //     }
+
+        //     // 确保路径是绝对路径或正确处理相对路径
+        //     let fullUrl = pdfUrl;
+        //     if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
+        //         fullUrl = './' + pdfUrl;
+        //     }
+
+        //     placeholder.style.display = 'none';
+        //     viewer.style.display = 'block';
+        //     downloadBtn.style.display = 'inline-flex';
+        //     downloadBtn.href = fullUrl;
+
+        //     // 策略1: 如果浏览器支持原生 PDF 查看，直接使用
+        //     // 策略2: 使用 PDF.js
+        //     // 策略3: 使用 Google Docs Viewer 作为后备
+
+        //     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        //     if (isMobile) {
+        //         // 移动设备直接使用原生查看器
+        //         viewer.src = fullUrl;
+        //     } else {
+        //         // 桌面端优先使用原生 PDF 查看器，兼容性最好
+        //         // 添加 #toolbar=1 确保显示工具栏
+        //         viewer.src = fullUrl + '#toolbar=1&navpanes=1';
+
+        //         // 如果加载失败，可以尝试使用 PDF.js
+        //         viewer.onerror = () => {
+        //             console.log('原生 PDF 查看器加载失败，尝试使用 PDF.js');
+        //             // 这里可以添加 PDF.js 的渲染逻辑
+        //         };
+        //     }
+        // }
+
         // 加载 Markdown
         async function loadMarkdown(url) {
             const contentEl = document.getElementById('markdown-content');
-            contentEl.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>正在加载...</p></div>`;
+
+            contentEl.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>正在加载《${currentBook.name}》...</p>
+                </div>
+            `;
 
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('无法读取文件');
                 const mdText = await response.text();
 
+                // 配置 marked
                 marked.setOptions({
                     highlight: function(code, lang) {
                         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -1734,16 +1654,27 @@
                     mangle: false
                 });
 
+                // 渲染内容
                 contentEl.innerHTML = marked.parse(mdText);
+
+                // 生成目录
                 generateTOC(contentEl);
-                
+
+                // 高亮代码
                 document.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightBlock(block);
                 });
 
+                // 滚动到顶部
                 document.getElementById('content-panel').scrollTop = 0;
+
             } catch (err) {
-                contentEl.innerHTML = `<div class="error-state"><h3>加载失败</h3><p>${err.message}</p></div>`;
+                contentEl.innerHTML = `
+                    <div class="error-state">
+                        <h3>❌ 加载失败</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
             }
         }
 
@@ -1751,6 +1682,7 @@
         function generateTOC(contentEl) {
             const tocList = document.getElementById('toc-list');
             tocList.innerHTML = '';
+
             const headings = contentEl.querySelectorAll('h1, h2, h3');
 
             if (headings.length === 0) {
@@ -1761,17 +1693,23 @@
             headings.forEach((heading, index) => {
                 const id = `heading-${index}`;
                 heading.setAttribute('id', id);
+
                 const li = document.createElement('li');
                 const a = document.createElement('a');
+
                 a.textContent = heading.textContent;
                 a.className = `toc-${heading.tagName.toLowerCase()}`;
                 a.href = `#${id}`;
                 a.onclick = (e) => {
                     e.preventDefault();
+                    // 移除其他激活状态
                     tocList.querySelectorAll('a').forEach(link => link.classList.remove('active'));
+                    // 添加当前激活状态
                     a.classList.add('active');
+                    // 平滑滚动
                     heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 };
+
                 li.appendChild(a);
                 tocList.appendChild(li);
             });
@@ -1780,8 +1718,13 @@
         // 返回书库
         function backToLibrary() {
             document.getElementById('reader-view').style.display = 'none';
-            document.getElementById('library-view').style.display = 'block';
+            document.getElementById('library-view').style.display = 'flex';
+
+            // 清空 PDF
             document.getElementById('pdf-viewer').src = '';
+            document.getElementById('pdf-placeholder').style.display = 'flex';
+            document.getElementById('pdf-viewer').style.display = 'none';
+
             currentBook = null;
         }
 
@@ -1794,8 +1737,10 @@
 
         // 切换自动换行
         function toggleWrap() {
-            document.querySelectorAll('.markdown-body pre').forEach(pre => {
-                pre.style.whiteSpace = pre.style.whiteSpace === 'pre-wrap' ? 'pre' : 'pre-wrap';
+            const preElements = document.querySelectorAll('.markdown-body pre');
+            preElements.forEach(pre => {
+                const current = pre.style.whiteSpace;
+                pre.style.whiteSpace = current === 'pre-wrap' ? 'pre' : 'pre-wrap';
             });
         }
 
@@ -1811,10 +1756,11 @@
             }
         }
 
-        // 监听滚动更新目录
+        // 监听滚动，更新目录激活状态
         document.getElementById('content-panel').addEventListener('scroll', () => {
             const headings = document.querySelectorAll('.markdown-body h1, .markdown-body h2, .markdown-body h3');
             const tocLinks = document.querySelectorAll('#toc-list a');
+
             let current = '';
             const scrollPos = document.getElementById('content-panel').scrollTop + 100;
 
@@ -1828,6 +1774,7 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href') === `#${current}`) {
                     link.classList.add('active');
+                    // 自动滚动目录到可视区域
                     link.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
             });
@@ -1845,6 +1792,7 @@
 
         document.addEventListener('mousemove', (e) => {
             if (!isResizing || !currentResizeHandle) return;
+
             const container = document.querySelector('.reader-container');
             const rect = container.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -1856,7 +1804,8 @@
                 const totalWidth = rect.width;
                 const tocWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--toc-width'));
                 const contentWidth = Math.max(300, Math.min(totalWidth - tocWidth - 300, x - tocWidth));
-                const pdfWidth = totalWidth - tocWidth - contentWidth - 12;
+                const pdfWidth = totalWidth - tocWidth - contentWidth - 12; // 12px for handles
+
                 document.documentElement.style.setProperty('--content-width', contentWidth + 'px');
                 document.documentElement.style.setProperty('--pdf-width', pdfWidth + 'px');
             }
