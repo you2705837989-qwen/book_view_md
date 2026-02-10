@@ -1165,7 +1165,7 @@
             
             <div class="search-container">
                 <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" placeholder="搜索教材名称、作者、ISBN...">
+                <input type="text" class="search-input" placeholder="搜索教材名称、作者、ISBN-">
             </div>
         </header>
 
@@ -1181,16 +1181,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部教材', this)">
-                                <span>全部教材</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
                                 <span class="book-count" id="count-all">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('computer', '计算机类', this)">
-                                <span>通信工程</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('electronics', '电子信息', this)">
-                                <span>机械工程</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1203,16 +1208,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('math', '数学', this)">
-                                <span>数学</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('physics', '物理', this)">
-                                <span>物理</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('chemistry', '化学', this)">
-                                <span>化学</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1225,12 +1235,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('basic-med', '基础医学', this)">
-                                <span>书法</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('clinical', '临床医学', this)">
-                                <span>绘画</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1243,12 +1262,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('basic-med', '基础医学', this)">
-                                <span>基础医学</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('clinical', '临床医学', this)">
-                                <span>临床医学</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1261,12 +1289,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('law', '法学', this)">
-                                <span>基础会计</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('literature', '文学', this)">
-                                <span>初级会计</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1280,12 +1317,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('law', '法学', this)">
-                                <span>基础会计</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('literature', '文学', this)">
-                                <span>初级会计</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
@@ -1298,12 +1344,21 @@
                             <span class="category-arrow">›</span>
                         </div>
                         <div class="subcategory-list">
-                            <div class="subcategory-item" onclick="selectSubcategory('law', '法学', this)">
-                                <span>基础会计</span>
+                            <!-- 新增的通用分类 -->
+                            <div class="subcategory-item active" onclick="selectSubcategory('all', '全部书籍', this)">
+                                <span>全部书籍</span>
+                                <span class="book-count" id="count-all">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('textbook', '教材', this)">
+                                <span>教材</span>
                                 <span class="book-count">0</span>
                             </div>
-                            <div class="subcategory-item" onclick="selectSubcategory('literature', '文学', this)">
-                                <span>初级会计</span>
+                            <div class="subcategory-item" onclick="selectSubcategory('teaching-material', '教辅', this)">
+                                <span>教辅</span>
+                                <span class="book-count">0</span>
+                            </div>
+                            <div class="subcategory-item" onclick="selectSubcategory('past-exam', '真题', this)">
+                                <span>真题</span>
                                 <span class="book-count">0</span>
                             </div>
                         </div>
