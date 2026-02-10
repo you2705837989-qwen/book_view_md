@@ -856,7 +856,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            height: 100vh;
         }
 
         .pdf-header {
@@ -932,10 +931,8 @@
         .pdf-container {
             flex: 1;
             position: relative;
-            overflow: auto;
+            overflow: hidden;
             background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
         }
 
         #pdf-viewer {
@@ -1080,7 +1077,7 @@
             }
             .toc-sidebar,
             .content-panel,
-            /* .pdf-panel {
+            .pdf-panel {
                 width: 100% !important;
                 height: 33.33vh;
                 border-right: none;
@@ -1088,18 +1085,7 @@
             }
             .pdf-panel {
                 border-bottom: none;
-            } */
-
-
-            .pdf-panel {
-                width: 100% !important;
-                height: 33.33vh;
-                border-right: none;
-                border-bottom: none;
-                display: flex;
-                flex-direction: column;
             }
-
             .resize-handle {
                 display: none;
             }
@@ -1146,7 +1132,6 @@
             display: block;
         }
     </style>
-<base target="_blank">
 </head>
 <body>
 
@@ -1888,10 +1873,17 @@
         }
 
         // 加载 PDF - 使用多种策略确保兼容性
+        // let pageRendering = false;
+        // let pageNumPending = null;
+        // let canvas = null;
+        // let ctx = null;
+        // 加载 PDF - 混合模式：单页显示 + 滚动预加载
         let pageRendering = false;
         let pageNumPending = null;
-        let canvas = null;
-        let ctx = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let pdfDoc = null;
+        let renderedPages = new Set(); // 记录已渲染的页面
 
         async function loadPDF(pdfUrl) {
             const placeholder = document.getElementById('pdf-placeholder');
@@ -1905,252 +1897,373 @@
                 fullUrl = './' + pdfUrl;
             }
 
+            // 重置状态
+            renderedPages.clear();
+            currentPage = 1;
+
             // 显示加载中
             placeholder.style.display = 'flex';
             placeholder.innerHTML = `<div class="spinner"></div><p>正在加载 PDF...</p>`;
             viewer.style.display = 'none';
             
-            // 移除旧的 canvas
-            const oldCanvas = document.getElementById('pdf-canvas-container');
-            if (oldCanvas) oldCanvas.remove();
+            // 移除旧的容器
+            const oldContainer = document.getElementById('pdf-canvas-container');
+            if (oldContainer) oldContainer.remove();
 
             try {
                 // 加载文档
                 const loadingTask = pdfjsLib.getDocument(fullUrl);
                 pdfDoc = await loadingTask.promise;
                 totalPages = pdfDoc.numPages;
-                currentPage = 1;
 
-                // 创建容器
+                // 创建主容器
                 const canvasContainer = document.createElement('div');
                 canvasContainer.id = 'pdf-canvas-container';
                 canvasContainer.style.cssText = `
                     width: 100%;
-                    flex: 1;
-                    overflow: auto;
+                    height: 100%;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    background: #f5f5f5;
+                    position: relative;
+                `;
+                
+                // 创建页面包装器（用于存放所有页面canvas）
+                const pagesWrapper = document.createElement('div');
+                pagesWrapper.id = 'pages-wrapper';
+                pagesWrapper.style.cssText = `
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    background: #f5f5f5;
                     padding: 20px;
-                    box-sizing: border-box;
-                    min-height: 0;
-                `;
-                
-                // 创建 canvas
-                canvas = document.createElement('canvas');
-                canvas.style.cssText = `
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                    background: white;
-                    max-width: 100%;
-                    height: auto;
-                    margin-bottom: 20px;
-                `;
-                canvasContainer.appendChild(canvas);
-                ctx = canvas.getContext('2d');
-                
-                // 创建控制栏
-                const controls = document.createElement('div');
-                controls.style.cssText = `
-                    position: sticky;
-                    bottom: 0;
-                    background: rgba(255, 255, 255, 0.95);
-                    padding: 12px 20px;
-                    border-top: 1px solid #ddd;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
                     gap: 20px;
-                    width: 100%;
-                    flex-shrink: 0;
-                    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-                    z-index: 10;
+                    min-height: 100%;
+                `;
+                canvasContainer.appendChild(pagesWrapper);
+                
+                // 创建浮动控制栏（固定在底部）
+                const controls = document.createElement('div');
+                controls.id = 'pdf-float-controls';
+                controls.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(255,255,255,0.95);
+                    padding: 12px 24px;
+                    border-radius: 30px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    z-index: 1000;
+                    backdrop-filter: blur(10px);
                 `;
                 controls.innerHTML = `
-                    <button id="pdf-prev" style="padding: 5px 15px; cursor: pointer;">上一页</button>
-                    <span id="page-num">1</span> / <span id="page-count">${totalPages}</span>
-                    <button id="pdf-next" style="padding: 5px 15px; cursor: pointer;">下一页</button>
-                    <input type="range" id="page-slider" min="1" max="${totalPages}" value="1" style="width: 100px;">
+                    <button id="pdf-prev" style="
+                        padding: 8px 16px;
+                        border: none;
+                        background: #f0f0f0;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#e0e0e0'" onmouseout="this.style.background='#f0f0f0'">← 上一页</button>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="number" id="page-input" value="1" min="1" max="${totalPages}" style="
+                            width: 50px;
+                            padding: 6px;
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            text-align: center;
+                            font-size: 14px;
+                        ">
+                        <span style="color: #666; font-size: 14px;">/ ${totalPages}</span>
+                    </div>
+                    
+                    <button id="pdf-next" style="
+                        padding: 8px 16px;
+                        border: none;
+                        background: #1976d2;
+                        color: white;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='#1565c0'" onmouseout="this.style.background='#1976d2'">下一页 →</button>
+                    
+                    <div style="width: 1px; height: 20px; background: #ddd;"></div>
+                    
+                    <select id="zoom-select" style="
+                        padding: 6px 12px;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        cursor: pointer;
+                    ">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                        <option value="fit">适应宽度</option>
+                    </select>
                 `;
-                canvasContainer.appendChild(controls);
                 
-                container.insertBefore(canvasContainer, viewer);
+                container.style.position = 'relative';
+                container.appendChild(canvasContainer);
+                container.appendChild(controls);
                 
                 // 绑定事件
-                document.getElementById('pdf-prev').onclick = () => onPrevPage();
-                document.getElementById('pdf-next').onclick = () => onNextPage();
-                document.getElementById('page-slider').oninput = (e) => {
-                    queueRenderPage(parseInt(e.target.value));
+                document.getElementById('pdf-prev').onclick = () => scrollToPage(currentPage - 1);
+                document.getElementById('pdf-next').onclick = () => scrollToPage(currentPage + 1);
+                
+                const pageInput = document.getElementById('page-input');
+                pageInput.onchange = (e) => {
+                    const num = parseInt(e.target.value);
+                    if (num >= 1 && num <= totalPages) {
+                        scrollToPage(num);
+                    }
+                };
+                pageInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') {
+                        e.target.blur();
+                        e.target.dispatchEvent(new Event('change'));
+                    }
                 };
                 
-                // 渲染第一页
-                await renderPage(currentPage);
+                // 缩放功能
+                let currentScale = 'fit';
+                document.getElementById('zoom-select').onchange = (e) => {
+                    currentScale = e.target.value;
+                    // 重新渲染当前可见页面
+                    updateVisiblePages();
+                };
+                
+                // 滚动监听 - 懒加载 + 更新当前页码
+                let scrollTimeout;
+                canvasContainer.addEventListener('scroll', () => {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        updateCurrentPageFromScroll();
+                        lazyLoadPages();
+                    }, 150);
+                });
+                
+                // 初始渲染前3页
+                for (let i = 1; i <= Math.min(3, totalPages); i++) {
+                    await renderPageToDOM(i, pagesWrapper);
+                }
+                
+                // 更新当前页码
+                updateCurrentPageFromScroll();
                 
                 placeholder.style.display = 'none';
                 
             } catch (error) {
-                console.error(error);
-                // 失败时回退到 iframe
-                viewer.src = fullUrl;
+                console.error('PDF加载失败:', error);
+                // 回退到 iframe
+                viewer.src = fullUrl + '#toolbar=1';
                 viewer.style.display = 'block';
                 placeholder.style.display = 'none';
             }
         }
 
-        function renderPage(num) {
-            pageRendering = true;
+        // 渲染单页到DOM
+        async function renderPageToDOM(pageNum, container) {
+            if (renderedPages.has(pageNum)) return;
             
-            return pdfDoc.getPage(num).then((page) => {
-                // 根据容器宽度计算缩放比例（自适应）
-                const containerWidth = document.getElementById('pdf-container').clientWidth - 60;
-                const viewport = page.getViewport({ scale: 1 });
-                const scale = Math.min(containerWidth / viewport.width, 1.5); // 最大1.5倍
-                const scaledViewport = page.getViewport({ scale });
-
-                canvas.height = scaledViewport.height;
-                canvas.width = scaledViewport.width;
-
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: scaledViewport
-                };
+            const pageDiv = document.createElement('div');
+            pageDiv.id = `page-${pageNum}`;
+            pageDiv.className = 'pdf-page';
+            pageDiv.dataset.pageNum = pageNum;
+            pageDiv.style.cssText = `
+                position: relative;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            `;
+            
+            // 占位符（防止布局抖动）
+            const placeholder = document.createElement('div');
+            placeholder.style.cssText = `
+                width: 800px;
+                height: 1130px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #999;
+            `;
+            placeholder.textContent = `第 ${pageNum} 页 加载中...`;
+            pageDiv.appendChild(placeholder);
+            
+            container.appendChild(pageDiv);
+            renderedPages.add(pageNum);
+            
+            // 异步渲染
+            try {
+                const page = await pdfDoc.getPage(pageNum);
                 
-                const renderTask = page.render(renderContext);
+                // 计算缩放
+                let scale = 1.5;
+                const zoomSelect = document.getElementById('zoom-select');
+                const zoomValue = zoomSelect ? zoomSelect.value : 'fit';
                 
-                return renderTask.promise.then(() => {
-                    pageRendering = false;
-                    if (pageNumPending !== null) {
-                        renderPage(pageNumPending);
-                        pageNumPending = null;
-                    }
-                });
-            }).then(() => {
-                // 更新页码显示
-                document.getElementById('page-num').textContent = num;
-                document.getElementById('page-slider').value = num;
-                currentPage = num;
-            });
-        }
-
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        function onPrevPage() {
-            if (currentPage <= 1) return;
-            queueRenderPage(currentPage - 1);
-        }
-
-        function onNextPage() {
-            if (currentPage >= totalPages) return;
-            queueRenderPage(currentPage + 1);
-        }
-
-
-        // 渲染所有页面（简化版，实际使用可改为虚拟滚动）
-        async function renderAllPages(pdfDoc, container) {
-            for (let i = 1; i <= pdfDoc.numPages; i++) {
-                const page = await pdfDoc.getPage(i);
-                const scale = 1.5;
+                if (zoomValue === 'fit') {
+                    const containerWidth = container.clientWidth - 40;
+                    const viewport = page.getViewport({ scale: 1 });
+                    scale = Math.min(containerWidth / viewport.width, 1.5);
+                } else {
+                    scale = parseFloat(zoomValue);
+                }
+                
                 const viewport = page.getViewport({ scale });
                 
+                // 创建 canvas
                 const canvas = document.createElement('canvas');
-                canvas.style.cssText = `
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                    background: white;
-                    max-width: 100%;
-                `;
-                const context = canvas.getContext('2d');
+                canvas.style.cssText = 'display: block; max-width: 100%;';
+                const ctx = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
                 
-                container.appendChild(canvas);
+                // 替换占位符
+                pageDiv.innerHTML = '';
+                pageDiv.appendChild(canvas);
                 
+                // 添加页码标签
+                const label = document.createElement('div');
+                label.textContent = `${pageNum} / ${totalPages}`;
+                label.style.cssText = `
+                    position: absolute;
+                    bottom: -25px;
+                    right: 0;
+                    font-size: 12px;
+                    color: #666;
+                `;
+                pageDiv.appendChild(label);
+                
+                // 渲染
                 await page.render({
-                    canvasContext: context,
+                    canvasContext: ctx,
                     viewport: viewport
                 }).promise;
                 
-                // 添加页码标记
-                const pageLabel = document.createElement('div');
-                pageLabel.textContent = `第 ${i} 页 / 共 ${pdfDoc.numPages} 页`;
-                pageLabel.style.cssText = `
-                    color: #666;
-                    font-size: 12px;
-                    margin-top: -10px;
-                    margin-bottom: 10px;
-                `;
-                container.appendChild(pageLabel);
+            } catch (err) {
+                console.error(`渲染第${pageNum}页失败:`, err);
+                pageDiv.innerHTML = `<div style="padding: 50px; color: red;">第 ${pageNum} 页加载失败</div>`;
             }
         }
 
-        // 添加 PDF 控制栏（页码、下载、全屏）
-        function addPDFControls(container, pdfUrl) {
-            const controls = document.createElement('div');
-            controls.style.cssText = `
-                position: sticky;
-                bottom: 20px;
-                background: rgba(255,255,255,0.95);
-                padding: 10px 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-                display: flex;
-                gap: 15px;
-                align-items: center;
-                justify-content: center;
-                z-index: 100;
-                margin-top: 20px;
-            `;
+        // 根据滚动位置更新当前页码
+        function updateCurrentPageFromScroll() {
+            const container = document.getElementById('pdf-canvas-container');
+            const pages = document.querySelectorAll('.pdf-page');
             
-            controls.innerHTML = `
-                <button onclick="this.closest('.pdfjs-canvas').scrollTo({top: 0, behavior: 'smooth'})" 
-                        style="padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">
-                    顶部
-                </button>
-                <span style="color: #666; font-size: 14px;">PDF.js 渲染模式</span>
-                <a href="${pdfUrl}" download 
-                style="padding: 6px 12px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">
-                    下载 PDF
-                </a>
-            `;
+            if (!container || pages.length === 0) return;
             
-            container.appendChild(controls);
+            const containerRect = container.getBoundingClientRect();
+            const containerCenter = containerRect.top + containerRect.height / 2;
+            
+            let closestPage = 1;
+            let minDistance = Infinity;
+            
+            pages.forEach(page => {
+                const rect = page.getBoundingClientRect();
+                const pageCenter = rect.top + rect.height / 2;
+                const distance = Math.abs(pageCenter - containerCenter);
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPage = parseInt(page.dataset.pageNum);
+                }
+            });
+            
+            if (closestPage !== currentPage) {
+                currentPage = closestPage;
+                updatePageIndicator();
+            }
         }
 
-        // PDF 加载失败提示
-        function showPDFError(placeholder, pdfUrl) {
-            placeholder.style.display = 'flex';
-            placeholder.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
-                    <h3>PDF 已在新的标签页打开或开始下载</h3>
-                    <p style="color: #666; margin: 16px 0;">如果未自动开始，请点击下方按钮</p>
-                    <a href="${pdfUrl}" target="_blank" 
-                    style="display: inline-block; padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 6px; margin-top: 10px;">
-                        打开 PDF
-                    </a>
-                </div>
-            `;
+        // 懒加载可见页面及其前后页
+        function lazyLoadPages() {
+            const container = document.getElementById('pdf-canvas-container');
+            if (!container) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            const pages = document.querySelectorAll('.pdf-page');
+            
+            pages.forEach(page => {
+                const rect = page.getBoundingClientRect();
+                const pageNum = parseInt(page.dataset.pageNum);
+                
+                // 检查是否在可视区域附近（上下各一屏）
+                const isNearViewport = rect.bottom > containerRect.top - containerRect.height 
+                                    && rect.top < containerRect.bottom + containerRect.height;
+                
+                if (isNearViewport && !renderedPages.has(pageNum)) {
+                    renderPageToDOM(pageNum, document.getElementById('pages-wrapper'));
+                }
+            });
+            
+            // 预加载后续页面
+            const lastRendered = Math.max(...Array.from(renderedPages));
+            const preloadUpTo = Math.min(lastRendered + 2, totalPages);
+            for (let i = lastRendered + 1; i <= preloadUpTo; i++) {
+                if (!renderedPages.has(i)) {
+                    renderPageToDOM(i, document.getElementById('pages-wrapper'));
+                }
+            }
         }
 
-        // 修改 openPdfFullscreen 函数，支持 PDF.js 模式
-        function openPdfFullscreen() {
-            const pdfUrl = currentBook?.pdfUrl;
-            if (!pdfUrl) return;
+        // 滚动到指定页面
+        function scrollToPage(pageNum) {
+            if (pageNum < 1 || pageNum > totalPages) return;
             
-            let fullUrl = pdfUrl;
-            if (!pdfUrl.startsWith('http') && !pdfUrl.startsWith('/')) {
-                fullUrl = './' + pdfUrl;
+            const pageDiv = document.getElementById(`page-${pageNum}`);
+            if (pageDiv) {
+                pageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // 如果页面还没渲染，先渲染再滚动
+                renderPageToDOM(pageNum, document.getElementById('pages-wrapper')).then(() => {
+                    const el = document.getElementById(`page-${pageNum}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
+            }
+            currentPage = pageNum;
+            updatePageIndicator();
+        }
+
+        // 更新页码指示器
+        function updatePageIndicator() {
+            const input = document.getElementById('page-input');
+            if (input) {
+                input.value = currentPage;
+            }
+        }
+
+        // 更新可见页面的缩放
+        async function updateVisiblePages() {
+            const pagesWrapper = document.getElementById('pages-wrapper');
+            if (!pagesWrapper) return;
+            
+            // 清空已渲染集合，强制重新渲染
+            renderedPages.clear();
+            pagesWrapper.innerHTML = '';
+            
+            // 重新渲染当前页及附近页面
+            const start = Math.max(1, currentPage - 1);
+            const end = Math.min(totalPages, currentPage + 1);
+            
+            for (let i = start; i <= end; i++) {
+                await renderPageToDOM(i, pagesWrapper);
             }
             
-            // 使用 Mozilla 的在线查看器（终极后备方案）
-            const mozillaViewer = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}`;
-            window.open(mozillaViewer, '_blank');
+            // 滚动回当前页
+            scrollToPage(currentPage);
         }
+
 
 
         // 加载 Markdown
